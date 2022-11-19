@@ -22,7 +22,7 @@ ignore_user_abort(1);
 ini_set('max_execution_time', 0);
 ini_set('memory_limit', '-1'); //Unlimited memory usage
 define('MAIN_INCLUDED', 1); //Token and SQL credential files may be protected locally and require this to be defined to access
-require getcwd(). '/token.php'; //$token
+require getcwd() . '/token.php'; //$token
 include getcwd() . '/vendor/autoload.php';
 
 $loop = Loop::get();
@@ -52,7 +52,7 @@ include 'variable_functions.php';
 include 'verifier_functions.php';
 include 'DF13.php';
 
-$options = array( //All these file paths need to be updated for DF13
+$options = array(
     'loop' => $loop,
     'discord' => $discord,
     'browser' => $browser,
@@ -73,30 +73,30 @@ $options = array( //All these file paths need to be updated for DF13
         'status_path' => 'status.txt',
         
         //Defines
-        'map_defines_path' => '/home/1713/DF13-git/code/__defines/maps.dm',
+        'map_defines_path' => 'C:/GitHub/Dwarf-Fortress-13/DF13-git/code/__defines/maps.dm',
         
         //DF13
-        'log_basedir' => '/home/1713/DF13-rp/data/logs',
-        'ooc_path' => '/home/1713/DF13-rp/ooc.log',
-        'admin_path' => '/home/1713/DF13-rp/admin.log',
-        'discord2ooc' => '/home/1713/DF13-rp/SQL/discord2ooc.txt',
-        'discord2admin' => '/home/1713/DF13-rp/SQL/discord2admin.txt',
-        'discord2dm' => '/home/1713/DF13-rp/SQL/discord2dm.txt',
-        'discord2ban' => '/home/1713/DF13-rp/SQL/discord2ban.txt',
-        'discord2unban' => '/home/1713/DF13-rp/SQL/discord2unban.txt',
-        'whitelist' => '/home/1713/DF13-rp/SQL/whitelist.txt',
-        'bans' => '/home/1713/DF13-rp/SQL/bans.txt',
+        'log_basedir' => 'C:/GitHub/Dwarf-Fortress-13/data/logs',
+        'ooc_path' => 'C:/GitHub/Dwarf-Fortress-13/ooc.log',
+        'admin_path' => 'C:/GitHub/Dwarf-Fortress-13/admin.log',
+        'discord2ooc' => 'C:/GitHub/Dwarf-Fortress-13/SQL/discord2ooc.txt',
+        'discord2admin' => 'C:/GitHub/Dwarf-Fortress-13/SQL/discord2admin.txt',
+        'discord2dm' => 'C:/GitHub/Dwarf-Fortress-13/SQL/discord2dm.txt',
+        'discord2ban' => 'C:/GitHub/Dwarf-Fortress-13/SQL/discord2ban.txt',
+        'discord2unban' => 'C:/GitHub/Dwarf-Fortress-13/SQL/discord2unban.txt',
+        'whitelist' => 'C:/GitHub/Dwarf-Fortress-13/SQL/whitelist.txt',
+        'bans' => 'C:/GitHub/Dwarf-Fortress-13/SQL/bans.txt',
         
         //Script paths
-        'updateserverabspaths' => '/home/1713/DF13-rp/scripts/updateserverabspaths.py',
-        'serverdata' => '/home/1713/DF13-rp/serverdata.txt',
-        'dmb' => '/home/1713/DF13-rp/DF13.dmb',
-        'killsudos' => '/home/1713/DF13-rp/scripts/killsudos.py',
-        'killDF13' => '/home/1713/DF13-rp/scripts/killDF13.py',
-        'mapswap' => '/home/1713/DF13-rp/scripts/mapswap.py',
+        'updateserverabspaths' => 'C:/GitHub/Dwarf-Fortress-13/scripts/updateserverabspaths.py',
+        'serverdata' => 'C:/GitHub/Dwarf-Fortress-13/serverdata.txt',
+        'dmb' => 'C:/GitHub/Dwarf-Fortress-13/DF13.dmb',
+        'killsudos' => 'C:/GitHub/Dwarf-Fortress-13/scripts/killsudos.py',
+        'killDF13' => 'C:/GitHub/Dwarf-Fortress-13/scripts/killDF13.py',
+        'mapswap' => 'C:/GitHub/Dwarf-Fortress-13/scripts/mapswap.py',
         
          //Unused
-        'playerlogs' => '/home/1713/DF13-rp/SQL/playerlogs.txt',
+        'playerlogs' => 'C:/GitHub/Dwarf-Fortress-13/SQL/playerlogs.txt',
     ),
     'channel_ids' => array(
         'ooc_channel' => '', //#ooc
