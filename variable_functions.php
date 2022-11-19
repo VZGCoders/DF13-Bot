@@ -65,7 +65,7 @@ $status_changer_timer = function (DF13 $DF13) use ($status_changer_random): void
     $DF13->timers['status_changer_timer'] = $DF13->discord->getLoop()->addPeriodicTimer(120, function() use ($DF13, $status_changer_random) { $status_changer_random($DF13); });
 };
 
-$ban = function (DF13 $DF13, $array, $message = null) use ($ban, $ban_tdm): string
+$ban = function (DF13 $DF13, $array, $message = null): string
 {
     $admin = ($message ? $message->author->displayname : $DF13->discord->user->username);
     $txt = "$admin:::{$array[0]}:::{$array[1]}:::{$array[2]}" . PHP_EOL;
@@ -684,7 +684,7 @@ $bancheck_join = function (DF13 $DF13, $member) use ($bancheck): void
         });
     }
 };
-$slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart_tdm, $restart, $ranking, $rankme, $medals, $brmedals): void
+$slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart): void
 { //ready_slash
     //if ($command = $commands->get('name', 'ping')) $commands->delete($command->id);
     if (! $commands->get('name', 'ping')) $commands->save(new Command($DF13->discord, [
