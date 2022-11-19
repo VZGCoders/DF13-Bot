@@ -78,7 +78,7 @@ function termChildProcess(React\ChildProcess\Process $process) {
     echo 'Child process terminated' . PHP_EOL;
 }
 
-function portIsAvailable(int $port = 1714): bool
+function portIsAvailable(int $port = 7778): bool
 {
     $s = @socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 

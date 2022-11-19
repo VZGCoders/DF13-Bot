@@ -38,13 +38,13 @@ $df13_listeners = function (DF13 $DF13) use ($whitelist_update): void //Handles 
     $DF13->discord->on('GUILD_MEMBER_REMOVE', function (Member $member) use ($DF13, $whitelist_update): void
     {
         $DF13->getVerified();
-        if ($member->roles->has($DF13->role_ids['veteran'])) $whitelist_update($DF13, [$DF13->files['nomads_whitelist'], $DF13->files['tdm_whitelist']]);
+        if ($member->roles->has($DF13->role_ids['veteran'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
     });
     
     $DF13->discord->on('GUILD_MEMBER_UPDATE', function (Member $member, Discord $discord, ?Member $member_old) use ($DF13, $whitelist_update): void
     {
-        if ($member->roles->has($DF13->role_ids['veteran']) && ! $member_old->roles->has($DF13->role_ids['veteran'])) $whitelist_update($DF13, [$DF13->files['nomads_whitelist'], $DF13->files['tdm_whitelist']]);
-        if (! $member->roles->has($DF13->role_ids['veteran']) && $member_old->roles->has($DF13->role_ids['veteran'])) $whitelist_update($DF13, [$DF13->files['nomads_whitelist'], $DF13->files['tdm_whitelist']]);
+        if ($member->roles->has($DF13->role_ids['veteran']) && ! $member_old->roles->has($DF13->role_ids['veteran'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
+        if (! $member->roles->has($DF13->role_ids['veteran']) && $member_old->roles->has($DF13->role_ids['veteran'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
         if ($member->roles->has($DF13->role_ids['infantry']) && ! $member_old->roles->has($DF13->role_ids['infantry'])) $DF13->getVerified();;
         if (! $member->roles->has($DF13->role_ids['infantry']) && $member_old->roles->has($DF13->role_ids['infantry'])) $DF13->getVerified();;
     });
@@ -71,7 +71,7 @@ $promotable_check = function (DF13 $DF13, string $identifier): bool
     if (! $bancheck = $DF13->functions['misc']['bancheck']) return false;
     if (! $item = $DF13->verified->get('ss13', htmlspecialchars($identifier)) ?? $DF13->verified->get('discord', str_replace(['<@', '<@!', '>'], '', $identifier))) return false; //a&e, ckey and/or discord id exists in DB and member is in the Discord server
     if (strtotime($item['create_time']) > strtotime('-1 year')) return false; //b, 1 year
-    if (($item['seen_tdm'] + $item['seen_nomads'] + $item['seen_pers'])<100) return false; //c, 100 seen
+    if (($item['seen_tdm'] + $item['seen_df13'] + $item['seen_pers'])<100) return false; //c, 100 seen
     if ($bancheck($DF13, $item['ss13'])) return false; //d, must not have active ban
     return true;
 };

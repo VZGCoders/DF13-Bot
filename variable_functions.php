@@ -17,19 +17,18 @@ use \React\Promise\ExtendedPromiseInterface;
 
 $set_ips = function (DF13 $DF13): void
 { //on ready
-    $vzg_ip = gethostbyname('www.valzargaming.com');
-    $external_ip = file_get_contents('http://ipecho.net/plain');
+    $external_ip = gethostbyname('http://valzargaming.com');
+    $civ13_ip = gethostbyname('http://civ13.com');
     $DF13->ips = [
-        'nomads' => $external_ip,
-        'tdm' => $external_ip,
-        'vzg' => $vzg_ip,
+        'vzg' => $external_ip,
+        'civ13' => $civ13_ip,
     ];
     $DF13->ports = [
-        'nomads' => '1715',
         'tdm' => '1714',
+        'nomads' => '1715',
         'persistence' => '7777',
         'bc' => '1717', 
-        'kepler' => '1718',
+        'df13' => '7778',
     ];
 };
 
@@ -65,56 +64,29 @@ $status_changer_timer = function (DF13 $DF13) use ($status_changer_random): void
     $DF13->timers['status_changer_timer'] = $DF13->discord->getLoop()->addPeriodicTimer(120, function() use ($DF13, $status_changer_random) { $status_changer_random($DF13); });
 };
 
-$ban_nomads = function (DF13 $DF13, $array, $message = null): string
+$ban = function (DF13 $DF13, $array, $message = null): string
 {
     $admin = ($message ? $message->author->displayname : $DF13->discord->user->username);
     $txt = "$admin:::{$array[0]}:::{$array[1]}:::{$array[2]}" . PHP_EOL;
     $result = '';
-    if ($file = fopen($DF13->files['nomads_discord2ban'], 'a')) {
+    if ($file = fopen($DF13->files['discord2ban'], 'a')) {
         fwrite($file, $txt);
         fclose($file);
     } else {
-        $DF13->logger->warning("unable to open {$DF13->files['nomads_discord2ban']}");
-        $result .= "unable to open {$DF13->files['nomads_discord2ban']}" . PHP_EOL;
+        $DF13->logger->warning("unable to open {$DF13->files['discord2ban']}");
+        $result .= "unable to open {$DF13->files['discord2ban']}" . PHP_EOL;
     }
-    $result .= "**$admin** banned **{$array[0]}** from **Nomads** for **{$array[1]}** with the reason **{$array[2]}**" . PHP_EOL;
+    $result .= "**$admin** banned **{$array[0]}** from **DF13** for **{$array[1]}** with the reason **{$array[2]}**" . PHP_EOL;
     return $result;
 };
-$ban_tdm = function (DF13 $DF13, $array, $message = null): string
-{
-    $admin = ($message ? $message->author->displayname : $DF13->discord->user->username);
-    $txt = "$admin:::{$array[0]}:::{$array[1]}:::{$array[2]}" . PHP_EOL;
-    if (! $file = fopen($DF13->files['tdm_discord2ban'], 'a')) return "unable to open {$DF13->files['tdm_discord2ban']}" . PHP_EOL;
-    fwrite($file, $txt);
-    fclose($file);
-    return "**$admin** banned **{$array[0]}** from **TDM** for **{$array[1]}** with the reason **{$array[2]}**" . PHP_EOL;
-};
-$ban = function (DF13 $DF13, $array, $message = null) use ($ban_nomads, $ban_tdm): string
-{
-    return $ban_nomads($DF13, $array, $message) . $ban_tdm($DF13, $array, $message);
-};
 
-$unban_nomads = function (DF13 $DF13, string $ckey, ?string $admin = null): void
+$unban = function (DF13 $DF13, string $ckey, ?string $admin = null): void
 {
     if (! $admin) $admin = $DF13->discord->user->displayname;
-    if ($file = fopen($DF13->files['nomads_discord2unban'], 'a')) {
+    if ($file = fopen($DF13->files['discord2unban'], 'a')) {
         fwrite($file, "$admin:::$ckey");
         fclose($file);
     }
-};
-$unban_tdm = function (DF13 $DF13, string $ckey, ?string $admin = null): void
-{
-    if (! $admin) $admin = $DF13->discord->user->displayname;
-    if ($file = fopen($DF13->files['tdm_discord2unban'], 'a')) {
-        fwrite($file, "$admin:::$ckey");
-        fclose($file);
-    }
-};
-$unban = function (DF13 $DF13, string $ckey, ?string $admin = null) use ($unban_nomads, $unban_tdm): void
-{
-    if (! $admin) $admin = $DF13->discord->user->displayname;
-    $unban_nomads($DF13, $ckey, $admin);
-    $unban_tdm($DF13, $ckey, $admin);
 };
 
 $browser_call = function (DF13 $DF13, string $url, string $method = 'GET', array $headers = [], array|string $data = [], $curl = true): false|string|ExtendedPromiseInterface
@@ -141,43 +113,25 @@ $browser_call = function (DF13 $DF13, string $url, string $method = 'GET', array
     return $result;
 };
 
-$host_nomads = function (DF13 $DF13): void
+$host = function (DF13 $DF13): void
 {
-    \execInBackground("python3 {$DF13->files['nomads_updateserverabspaths']}");
-    \execInBackground("rm -f {$DF13->files['nomads_serverdata']}");
-    \execInBackground("python3 {$DF13->files['nomads_killsudos']}");
+    \execInBackground("python3 {$DF13->files['updateserverabspaths']}");
+    \execInBackground("rm -f {$DF13->files['serverdata']}");
+    \execInBackground("python3 {$DF13->files['killsudos']}");
     $DF13->discord->getLoop()->addTimer(30, function() use ($DF13) {
-        \execInBackground("DreamDaemon {$DF13->files['nomads_dmb']} {$DF13->ports['nomads']} -trusted -webclient -logself &");
+        \execInBackground("DreamDaemon {$DF13->files['dmb']} {$DF13->ports['df13']} -trusted -webclient -logself &");
     });
 };
-$kill_nomads = function (DF13 $DF13): void
+$kill = function (DF13 $DF13): void
 {
-    \execInBackground("python3 {$DF13->files['nomads_killDF13']}");
+    \execInBackground("python3 {$DF13->files['killDF13']}");
 };
-$restart_nomads = function (DF13 $DF13) use ($kill_nomads, $host_nomads): void
+$restart = function (DF13 $DF13) use ($kill, $host): void
 {
-    $kill_nomads($DF13);
-    $host_nomads($DF13);
+    $kill($DF13);
+    $host($DF13);
 };
-$host_tdm = function (DF13 $DF13): void
-{
-    \execInBackground("python3 {$DF13->files['tdm_updateserverabspaths']}");
-    \execInBackground("rm -f {$DF13->files['tdm_serverdata']}");
-    \execInBackground("python3 {$DF13->files['tdm_killsudos']}");
-    $DF13->discord->getLoop()->addTimer(30, function() use ($DF13) {
-        \execInBackground("DreamDaemon {$DF13->files['tdm_dmb']} {$DF13->ports['tdm']} -trusted -webclient -logself &");
-    });
-};
-$kill_tdm = function (DF13 $DF13): void
-{
-    \execInBackground("python3 {$DF13->files['tdm_killDF13']}");
-};
-$restart_tdm = function (DF13 $DF13) use ($kill_tdm, $host_tdm): void
-{
-    $kill_tdm($DF13);
-    $host_tdm($DF13);
-};
-$mapswap_nomads = function (DF13 $DF13, string $mapto): bool
+$mapswap = function (DF13 $DF13, string $mapto): bool
 {
     if (! $file = fopen($DF13->files['map_defines_path'], 'r')) return false;
     
@@ -189,22 +143,7 @@ $mapswap_nomads = function (DF13 $DF13, string $mapto): bool
     fclose($file);
     if (! in_array($mapto, $maps)) return false;
     
-    \execInBackground("python3 {$DF13->files['mapswap_nomads']} $mapto");
-    return true;
-};
-$mapswap_tdm = function (DF13 $DF13, string $mapto): bool
-{
-    if (! $file = fopen($DF13->files['map_defines_path'], 'r')) return false;
-    
-    $maps = array();
-    while (($fp = fgets($file, 4096)) !== false) {
-        $linesplit = explode(' ', trim(str_replace('"', '', $fp)));
-        if (isset($linesplit[2]) && $map = trim($linesplit[2])) $maps[] = $map;
-    }
-    fclose($file);
-    if (! in_array($mapto, $maps)) return false;
-    
-    \execInBackground("python3 {$DF13->files['mapswap_tdm']} $mapto");
+    \execInBackground("python3 {$DF13->files['mapswap_df13']} $mapto");
     return true;
 };
 
@@ -220,13 +159,10 @@ $filenav = function (DF13 $DF13, string $basedir, array $subdirs) use (&$filenav
 $log_handler = function (DF13 $DF13, $message, string $message_content) use ($filenav)
 {
     $tokens = explode(';', $message_content);
-    if (!in_array(trim($tokens[0]), ['nomads', 'tdm'])) return $message->reply('Please use the format `logs nomads;folder;file` or `logs tdm;folder;file`');
-    if (trim($tokens[0]) == 'nomads') {
+    if (!in_array(trim($tokens[0]), ['df13'])) return $message->reply('Please use the format `logs df13;folder;file`');
+    if (trim($tokens[0]) == 'df13') {
         unset($tokens[0]);
-        $results = $filenav($DF13, $DF13->files['nomads_log_basedir'], $tokens);
-    } else {
-        unset($tokens[0]);
-        $results = $filenav($DF13, $DF13->files['tdm_log_basedir'], $tokens);
+        $results = $filenav($DF13, $DF13->files['log_basedir'], $tokens);
     }
     if ($results[0]) return $message->reply(MessageBuilder::new()->addFile($results[1], 'log.txt'));
     if (count($results[1]) > 7) $results[1] = [array_pop($results[1]), array_pop($results[1]), array_pop($results[1]), array_pop($results[1]), array_pop($results[1]), array_pop($results[1]), array_pop($results[1])];
@@ -235,155 +171,9 @@ $log_handler = function (DF13 $DF13, $message, string $message_content) use ($fi
 };
 $banlog_handler = function (DF13 $DF13, $message, string $message_content_lower)
 {
-    if (!in_array($message_content_lower, ['nomads', 'tdm'])) return $message->reply('Please use the format `bans nomads` or `bans tdm');
-    if ($message_content_lower == 'nomads') return $message->reply(MessageBuilder::new()->addFile($DF13->files['nomads_bans'], 'bans.txt'));
-    return $message->reply(MessageBuilder::new()->addFile($DF13->files['tdm_bans'], 'bans.txt'));
-};
-
-$recalculate_ranking = function (DF13 $DF13): bool
-{
-    if (! $search = fopen($DF13->files['tdm_awards_path'], 'r')) return false;
-    $result = array();
-    while (! feof($search)) {
-        $medal_s = 0;
-        $duser = explode(';', trim(str_replace(PHP_EOL, '', fgets($search))));
-        switch ($duser[2]) {
-            case 'long service medal':
-            case 'wounded badge':
-                $medal_s += 0.5;
-                break;
-            case 'tank destroyer silver badge':
-            case 'wounded silver badge':
-                $medal_s += 0.75;
-                break;
-            case 'wounded gold badge':
-                $medal_s += 1;
-                break;
-            case 'assault badge':
-            case 'tank destroyer gold badge':
-                $medal_s += 1.5;
-                break;
-            case 'combat medical badge':
-                $medal_s += 2;
-                break;
-            case 'iron cross 1st class':
-                $medal_s += 3;
-                break;
-            case 'iron cross 2nd class':
-                $medal_s += 5;
-                break;
-        }
-        $result[$duser[0]] += $medal_s;
-    }
-    fclose ($search);
-    arsort($result);
-    if (! $search = fopen($DF13->files['ranking_path'], 'w')) return false;
-    foreach ($result as $ckey => $score) fwrite($search, "$score;$ckey" . PHP_EOL);
-    fclose ($search);
-    return true;
-};
-$ranking = function (DF13 $DF13): false|string
-{
-    $line_array = array();
-    if (! $search = fopen($DF13->files['ranking_path'], 'r')) return false;
-    while (($fp = fgets($search, 4096)) !== false) $line_array[] = $fp;
-    fclose($search);
-
-    $topsum = 1;
-    $msg = '';
-    foreach ($line_array as $line) {
-        $sline = explode(';', trim(str_replace(PHP_EOL, '', $line)));
-        $msg .= "($topsum): **{$sline[1]}** with **{$sline[0]}** points." . PHP_EOL;
-        if (($topsum += 1) > 10) break;
-    }
-    return $msg;
-};
-$rankme = function (DF13 $DF13, string $ckey): false|string
-{
-    $line_array = array();
-    if (! $search = fopen($DF13->files['ranking_path'], 'r')) return false;
-    while (($fp = fgets($search, 4096)) !== false) $line_array[] = $fp;
-    fclose($search);
-    
-    $found = false;
-    $result = '';
-    foreach ($line_array as $line) {
-        $sline = explode(';', trim(str_replace(PHP_EOL, '', $line)));
-        if ($sline[1] == $ckey) {
-            $found = true;
-            $result .= "**{$sline[1]}** has a total rank of **{$sline[0]}**";
-        };
-    }
-    if (! $found) return "No medals found for ckey `$ckey`.";
-    return $result;
-};
-$medals = function (DF13 $DF13, string $ckey): false|string
-{
-    $result = '';
-    if (! $search = fopen($DF13->files['tdm_awards_path'], 'r')) return false;
-    $found = false;
-    while (! feof($search)) {
-        $line = fgets($search);
-        $line = trim(str_replace(PHP_EOL, '', $line)); # remove '\n' at end of line
-        if (str_contains($line, $ckey)) {
-            $found = true;
-            $duser = explode(';', $line);
-            if ($duser[0] == $ckey) {
-                switch ($duser[2]) {
-                    case 'long service medal':
-                        $medal_s = '<:long_service:705786458874707978>';
-                        break;
-                    case 'combat medical badge':
-                        $medal_s = '<:combat_medical_badge:706583430141444126>';
-                        break;
-                    case 'tank destroyer silver badge':
-                        $medal_s = '<:tank_silver:705786458882965504>';
-                        break;
-                    case 'tank destroyer gold badge':
-                        $medal_s = '<:tank_gold:705787308926042112>';
-                        break;
-                    case 'assault badge':
-                        $medal_s = '<:assault:705786458581106772>';
-                        break;
-                    case 'wounded badge':
-                        $medal_s = '<:wounded:705786458677706904>';
-                        break;
-                    case 'wounded silver badge':
-                        $medal_s = '<:wounded_silver:705786458916651068>';
-                        break;
-                    case 'wounded gold badge':
-                        $medal_s = '<:wounded_gold:705786458845216848>';
-                        break;
-                    case 'iron cross 1st class':
-                        $medal_s = '<:iron_cross1:705786458572587109>';
-                        break;
-                    case 'iron cross 2nd class':
-                        $medal_s = '<:iron_cross2:705786458849673267>';
-                        break;
-                    default: 
-                        $medal_s = '<:long_service:705786458874707978>';
-                }
-                $result .= "**{$duser[1]}:** {$medal_s} **{$duser[2]}**, *{$duser[4]}*, {$duser[5]}" . PHP_EOL;
-            }
-        }
-    }
-    if ($result != '') return $result;
-    if (! $found && ($result == '')) return 'No medals found for this ckey.';
-};
-$brmedals = function (DF13 $DF13, string $ckey): string
-{
-    $result = '';
-    $search = fopen($DF13->files['tdm_awards_br_path'], 'r');
-    $found = false;
-    while (! feof($search)) {
-        if (str_contains($line = trim(str_replace(PHP_EOL, '', fgets($search))), $ckey)) {
-            $found = true;
-            $duser = explode(';', $line);
-            if ($duser[0] == $ckey) $result .= "**{$duser[1]}:** placed *{$duser[2]} of {$duser[5]},* on {$duser[4]} ({$duser[3]})" . PHP_EOL;
-        }
-    }
-    if (! $found) return 'No medals found for this ckey.';
-    return $result;
+    if (!in_array($message_content_lower, ['df13'])) return $message->reply('Please use the format `bans df13`');
+    if ($message_content_lower == 'df13') return $message->reply(MessageBuilder::new()->addFile($DF13->files['bans'], 'bans.txt'));
+    return $message->reply(MessageBuilder::new()->addFile($DF13->files['bans'], 'bans.txt'));
 };
 
 $tests = function (DF13 $DF13, $message, string $message_content)
@@ -430,7 +220,7 @@ $rank_check = function (DF13 $DF13, $message, array $allowed_ranks): bool
     $message->reply('Rejected! You need to have at least the [' . ($message->guild->roles ? $message->guild->roles->get('id', $DF13->role_ids[array_pop($resolved_ranks)])->name : array_pop($allowed_ranks)) . '] rank.');
     return false;
 };
-$guild_message = function (DF13 $DF13, $message, string $message_content, string $message_content_lower) use ($rank_check, $ban, $ban_nomads, $ban_tdm, $unban, $unban_nomads, $unban_tdm, $kill_nomads, $kill_tdm, $host_nomads, $host_tdm, $restart_nomads, $restart_tdm, $mapswap_nomads, $mapswap_tdm, $log_handler, $banlog_handler, $recalculate_ranking, $ranking, $rankme, $medals, $brmedals, $tests)
+$guild_message = function (DF13 $DF13, $message, string $message_content, string $message_content_lower) use ($rank_check, $ban, $unban, $kill, $host, $restart, $mapswap, $log_handler, $banlog_handler, $tests)
 {
     if (! $message->member) return $message->reply('Error! Unable to get Discord Member class.');
     
@@ -445,27 +235,27 @@ $guild_message = function (DF13 $DF13, $message, string $message_content, string
     }
 
     if (str_starts_with($message_content_lower, 'tests')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌"); 
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌"); 
         return $tests($DF13, $message, trim(substr($message_content, strlen('tests'))));
     }
     
     if (str_starts_with($message_content_lower, 'promotable')) {
         if (! $promotable_check = $DF13->functions['misc']['promotable_check']) return $message->react("🔥");
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌"); 
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌"); 
         if (! $promotable_check($DF13, trim(substr($message_content, 10)))) return $message->react("👎");
         return $message->react("👍");
     }
     
     if (str_starts_with($message_content_lower, 'mass_promotion_loop')) {
         if (! $mass_promotion_loop = $DF13->functions['misc']['mass_promotion_loop']) return $message->react("🔥");
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌"); 
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌"); 
         if (! $mass_promotion_loop($DF13)) return $message->react("👎");
         return $message->react("👍");
     }
     
     if (str_starts_with($message_content_lower, 'mass_promotion_check')) {
         if (! $mass_promotion_check = $DF13->functions['misc']['mass_promotion_check']) return $message->react("🔥");
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌"); 
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌"); 
         if ($promotables = $mass_promotion_check($DF13, $message)) return $message->reply(MessageBuilder::new()->addFileFromContent('promotables.txt', json_encode($promotables)));;
         return $message->react("👎");
     }
@@ -473,55 +263,32 @@ $guild_message = function (DF13 $DF13, $message, string $message_content, string
     if (str_starts_with($message_content_lower, 'whitelistme')) {
         $ckey = str_replace(['.', '_', ' '], '', trim(substr($message_content_lower, 11)));
         if (! $ckey = $DF13->verified->get('discord', $message->member->id)['ss13']) return $message->reply("I didn't find your ckey in the approved list! Please reach out to an administrator.");
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight', 'veteran'])) return $message->react("❌");         
+        if (! $rank_check($DF13, $message, ['thane', 'rune king', 'longbeard', 'veteran'])) return $message->react("❌");         
         $found = false;
-        $whitelist1 = fopen($DF13->files['nomads_whitelist'], 'r');
+        $whitelist1 = fopen($DF13->files['whitelist'], 'r');
         if ($whitelist1) {
             while (($fp = fgets($whitelist1, 4096)) !== false) foreach (explode(';', trim(str_replace(PHP_EOL, '', $fp))) as $split) if ($split == $ckey) $found = true;
             fclose($whitelist1);
         }
-        $whitelist2 = fopen($DF13->files['tdm_whitelist'], 'r');
-        if ($whitelist2) {
-            while (($fp = fgets($whitelist2, 4096)) !== false) foreach (explode(';', trim(str_replace(PHP_EOL, '', $fp))) as $split) if ($split == $ckey) $found = true;
-            fclose($whitelist2);
-        }
-        if ($found) return $message->reply("$ckey is already in the whitelist!");
         
         $txt = "$ckey = {$message->member->id}" . PHP_EOL;
-        if ($whitelist1 = fopen($DF13->files['nomads_whitelist'], 'a')) {
+        if ($whitelist1 = fopen($DF13->files['whitelist'], 'a')) {
             fwrite($whitelist1, $txt);
             fclose($whitelist1);
-        }
-        if ($whitelist2 = fopen($DF13->files['tdm_whitelist'], 'a')) {
-            fwrite($whitelist2, $txt);
-            fclose($whitelist2);
         }
         return $message->reply("$ckey has been added to the whitelist.");
     }
     if (str_starts_with($message_content_lower, 'unwhitelistme')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight', 'veteran', 'infantry'])) return $message->react("❌");
+        if (! $rank_check($DF13, $message, ['thane', 'rune king', 'longbeard', 'veteran', 'infantry'])) return $message->react("❌");
         
         $lines_array = array();
-        if (! $wlist = fopen($DF13->files['nomads_whitelist'], 'r')) return $message->react("🔥");
+        if (! $wlist = fopen($DF13->files['whitelist'], 'r')) return $message->react("🔥");
         while (($fp = fgets($wlist, 4096)) !== false) $lines_array[] = $fp;
         fclose($wlist);
         
         $removed = 'N/A';
         if (count($lines_array) > 0) {
-            if (! $wlist = fopen($DF13->files['nomads_whitelist'], 'w')) return $message->react("🔥");
-            foreach ($lines_array as $line)
-                if (!str_contains($line, $message->member->username)) fwrite($wlist, $line);
-                else $removed = explode('=', $line)[0];
-            fclose($wlist);
-        }
-        
-        $lines_array = array();
-        if (! $wlist = fopen($DF13->files['tdm_whitelist'], 'r')) return $message->react("🔥");
-        while (($fp = fgets($wlist, 4096)) !== false) $lines_array[] = $fp;
-        fclose($wlist);
-        
-        if (count($lines_array) > 0) {
-            if (! $wlist = fopen($DF13->files['tdm_whitelist'], 'w')) return $message->react("🔥");
+            if (! $wlist = fopen($DF13->files['whitelist'], 'w')) return $message->react("🔥");
             foreach ($lines_array as $line)
                 if (!str_contains($line, $message->member->username)) fwrite($wlist, $line);
                 else $removed = explode('=', $line)[0];
@@ -530,12 +297,12 @@ $guild_message = function (DF13 $DF13, $message, string $message_content, string
         return $message->reply("Ckey $removed has been removed from the whitelist.");
     }
     if (str_starts_with($message_content_lower, 'refresh')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
+        if (! $rank_check($DF13, $message, ['thane', 'rune king', 'longbeard'])) return $message->react("❌");
         if ($DF13->getVerified()) return $message->react("👍");
         return $message->react("👎");
     }
     if (str_starts_with($message_content_lower, 'ban ')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
+        if (! $rank_check($DF13, $message, ['thane', 'rune king', 'longbeard'])) return $message->react("❌");
         $message_content = substr($message_content, 4);
         $split_message = explode('; ', $message_content); //$split_target[1] is the target
         if (! $split_message[0]) return $message->reply('Missing ban ckey! Please use the format `ban ckey; duration; reason`');
@@ -547,34 +314,8 @@ $guild_message = function (DF13 $DF13, $message, string $message_content, string
                 $member->addRole($DF13->role_ids['banished'], $result);
         return $message->reply($result);
     }
-    if (str_starts_with($message_content_lower, 'nomadsban ')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
-        $message_content = substr($message_content, 10);
-        $split_message = explode('; ', $message_content); //$split_target[1] is the target
-        if (! $split_message[0]) return $message->reply('Missing ban ckey! Please use the format `ban ckey; duration; reason`');
-        if (! $split_message[1]) return $message->reply('Missing ban duration! Please use the format `ban ckey; duration; reason`');
-        if (! $split_message[2]) return $message->reply('Missing ban reason! Please use the format `ban ckey; duration; reason`');
-        $result = $ban_nomads($DF13, $split_message, $message);
-        if ($id = $DF13->verified->get('ss13', $split_message[0])['discord'])
-            if ($member = $DF13->discord->guilds->get('id', $DF13->DF13_guild_id)->members->get('id', $id)) 
-                $member->addRole($DF13->role_ids['banished'], $result);
-        return $message->reply($result);
-    }
-    if (str_starts_with($message_content_lower, 'tdmban ')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
-        $message_content = substr($message_content, 7);
-        $split_message = explode('; ', $message_content); //$split_target[1] is the target
-        if (! $split_message[0]) return $message->reply('Missing ban ckey! Please use the format `ban ckey; duration; reason`');
-        if (! $split_message[1]) return $message->reply('Missing ban duration! Please use the format `ban ckey; duration; reason`');
-        if (! $split_message[2]) return $message->reply('Missing ban reason! Please use the format `ban ckey; duration; reason`');
-        $result = $ban_tdm($DF13, $split_message, $message);
-        if ($id = $DF13->verified->get('ss13', $split_message[0])['discord'])
-            if ($member = $DF13->discord->guilds->get('id', $DF13->DF13_guild_id)->members->get('id', $id)) 
-                $member->addRole($DF13->role_ids['banished'], $result);
-        return $message->reply($result);
-    }
     if (str_starts_with($message_content_lower, 'unban ')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
+        if (! $rank_check($DF13, $message, ['thane', 'rune king', 'longbeard'])) return $message->react("❌");
         $message_content_lower = substr($message_content_lower, 6);
         $split_message = explode('; ', $message_content_lower);
         
@@ -585,179 +326,111 @@ $guild_message = function (DF13 $DF13, $message, string $message_content, string
                 $member->removeRole($DF13->role_ids['banished'], $result);
         return $message->reply($result);
     }
-    if (str_starts_with($message_content_lower, 'unbannomads ')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
+    if (str_starts_with($message_content_lower, 'unbann ')) {
+        if (! $rank_check($DF13, $message, ['thane', 'rune king', 'longbeard'])) return $message->react("❌");
         $message_content_lower = substr($message_content_lower, 6);
         $split_message = explode('; ', $message_content_lower);
         
-        $unban_nomads($DF13, $split_message[0], $message->author->displayname);
-        $result = "**{$message->author->displayname}** unbanned **{$split_message[0]}** from **Nomads**";
+        $unban($DF13, $split_message[0], $message->author->displayname);
+        $result = "**{$message->author->displayname}** unbanned **{$split_message[0]}** from **DF13**";
         if ($id = $DF13->verified->get('ss13', $split_message[0])['discord'])
             if ($member = $DF13->discord->guilds->get('id', $DF13->DF13_guild_id)->members->get('id', $id)) 
                 $member->removeRole($DF13->role_ids['banished'], $result);
         return $message->reply($result);
     }
-    if (str_starts_with($message_content_lower, 'unbantdm ')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
-        $message_content_lower = substr($message_content_lower, 6);
-        $split_message = explode('; ', $message_content_lower);
-        
-        $unban_tdm($DF13, $split_message[0], $message->author->displayname);
-        $result = "**{$message->author->displayname}** unbanned **{$split_message[0]}** from **TDM**";
-        if ($id = $DF13->verified->get('ss13', $split_message[0])['discord'])
-            if ($member = $DF13->discord->guilds->get('id', $DF13->DF13_guild_id)->members->get('id', $id)) 
-                $member->removeRole($DF13->role_ids['banished'], $result);
-        return $message->reply($result);
-    }
-    if (str_starts_with($message_content_lower, 'hostnomads')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌");
-        $host_nomads($DF13);
-        return $message->reply("Attempting to update and bring up Nomads <byond://{$DF13->ips['nomads']}:{$DF13->ports['nomads']}>");
-    }
-    if (str_starts_with($message_content_lower, 'hosttdm')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌");
-        $host_tdm($DF13);
-        return $message->reply("Attempting to update and bring up TDM <byond://{$DF13->ips['tdm']}:{$DF13->ports['tdm']}>");
+    if (str_starts_with($message_content_lower, 'hostdf')) {
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌");
+        $host($DF13);
+        return $message->reply("Attempting to update and bring up DF13 <byond://{$DF13->ips['df13']}:{$DF13->ports['df13']}>");
     }
     if (str_starts_with($message_content_lower, 'restartdf')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌");
-        $restart_nomads($DF13);
-        return $message->reply("Attempted to kill, update, and bring up Nomads <byond://{$DF13->ips['nomads']}:{$DF13->ports['nomads']}>");
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌");
+        $restart($DF13);
+        return $message->reply("Attempted to kill, update, and bring up DF13 <byond://{$DF13->ips['df13']}:{$DF13->ports['df13']}>");
     }
-    if (str_starts_with($message_content_lower, 'restarttdm')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌");
-        $restart_tdm($DF13);
-        return $message->reply("Attempted to kill, update, and bring up TDM <byond://{$DF13->ips['tdm']}:{$DF13->ports['tdm']}>");
+    if (str_starts_with($message_content_lower, 'killdf')) {
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌");
+        $kill($DF13);
+        return $message->reply('Attempted to kill the DF13 server.');
     }
-    if (str_starts_with($message_content_lower, 'killnomads')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌");
-        $kill_nomads($DF13);
-        return $message->reply('Attempted to kill the Nomads server.');
-    }
-    if (str_starts_with($message_content_lower, 'killtdm')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌");
-        $kill_tdm($DF13);
-        return $message->reply('Attempted to kill the TDM server.');
-    }
-    if (str_starts_with($message_content_lower, 'mapswapnomads')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌");
-        $split_message = explode('mapswapnomads ', $message_content);
+    if (str_starts_with($message_content_lower, 'mapswapdf')) {
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌");
+        $split_message = explode('mapswap ', $message_content);
         if (count($split_message) < 2 || !($mapto = strtoupper($split_message[1]))) return $message->reply('You need to include the name of the map.');
-        if (! $mapswap_nomads($DF13, $mapto, $message)) return $message->reply("$mapto was not found in the map definitions.");
-        return $message->reply("Attempting to change map to $mapto");
-    }
-    if (str_starts_with($message_content_lower, 'mapswaptdm')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
-        $split_message = explode('mapswaptdm ', $message_content);
-        if (count($split_message) < 2 || !($mapto = strtoupper($split_message[1]))) return $message->reply('You need to include the name of the map.');
-        if (! $mapswap_tdm($DF13, $mapto, $message)) return $message->reply("$mapto was not found in the map definitions.");
+        if (! $mapswap($DF13, $mapto, $message)) return $message->reply("$mapto was not found in the map definitions.");
         return $message->reply("Attempting to change map to $mapto");
     }
     if (str_starts_with($message_content_lower, 'maplist')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌");
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌");
         return $message->channel->sendFile($DF13->files['map_defines_path'], 'maps.txt');
     }
     if (str_starts_with($message_content_lower, 'banlist')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
-        return $message->reply(MessageBuilder::new()->addFile($DF13->files['tdm_bans'], 'bans.txt'));
+        if (! $rank_check($DF13, $message, ['thane', 'rune king', 'longbeard'])) return $message->react("❌");
+        return $message->reply(MessageBuilder::new()->addFile($DF13->files['bans'], 'bans.txt'));
     }
     if (str_starts_with($message_content_lower, 'logs')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
+        if (! $rank_check($DF13, $message, ['thane', 'rune king', 'longbeard'])) return $message->react("❌");
         if ($log_handler($DF13, $message, trim(substr($message_content, 4)))) return;
     }
     if (str_starts_with($message_content_lower, 'bans')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain', 'knight'])) return $message->react("❌");
+        if (! $rank_check($DF13, $message, ['thane', 'rune king', 'longbeard'])) return $message->react("❌");
         if ($banlog_handler($DF13, $message, trim(substr($message_content_lower, 4)))) return;
     }
 
     if (str_starts_with($message_content_lower, 'stop')) {
-        if ($rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌");
+        if ($rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌");
         return $message->react("🛑")->done(function () use ($DF13) { $DF13->stop(); });
     }
 
-    if (str_starts_with($message_content_lower, 'ts')) {
-        if (! $state = trim(substr($message_content_lower, strlen('ts')))) return $message->reply('Wrong format. Please try `ts on` or `ts off`.');
-        if (! in_array($state, ['on', 'off'])) return $message->reply('Wrong format. Please try `ts on` or `ts off`.');
-        if (! $rank_check($DF13, $message, ['admiral'])) return $message->react("❌");
+    if (str_starts_with($message_content_lower, 'update bans')) {
+        if (! $rank_check($DF13, $message, ['thane', 'rune king'])) return $message->react("❌"); 
+        if (! $banlogs = file_get_contents($DF13->files['bans'])) return $message->react("🔥");
+        if (! $loglocs = file_get_contents($DF13->files['playerlogs'])) return $message->react("🔥");
         
-        if ($state == 'on') {
-            \execInBackground("cd {$DF13->files['typespess_path']}");
-            \execInBackground('git pull');
-            \execInBackground("sh {$DF13->files['typespess_launch_server_path']}&");
-            return $message->reply('Put **TypeSpess DF13** test server on: http://DF13.com/ts');
-        } else {
-            \execInBackground('killall index.js');
-            return $message->reply('**TypeSpess DF13** test server down.');
-        }
-    }
-
-    if (str_starts_with($message_content_lower, 'ranking')) {
-        if (! $recalculate_ranking($DF13)) return $message->reply('There was an error trying to recalculate ranking!');
-        if (! $msg = $ranking($DF13)) return $message->reply('There was an error trying to recalculate ranking!');
-        return $message->reply($msg);
-    }
-    if (str_starts_with($message_content_lower, 'rankme')) {
-        if (! $ckey = trim(str_replace(['.', '_', ' '], '', substr($message_content_lower, strlen('rankme'))))) return $message->reply('Wrong format. Please try `rankme [ckey]`.');
-        if (! $recalculate_ranking($DF13)) return $message->reply('There was an error trying to recalculate ranking!');
-        if (! $msg = $rankme($DF13, $ckey)) return $message->reply('There was an error trying to get your ranking!');
-        return $message->reply($msg);
-    }
-    if (str_starts_with($message_content_lower, 'medals')) {
-        if (! $ckey = trim(str_replace(['.', '_', ' '], '', substr($message_content_lower, strlen('medals'))))) return $message->reply('Wrong format. Please try `medals [ckey]`.');
-        if (! $msg = $medals($DF13, $ckey)) return $message->reply('There was an error trying to get your medals!');
-        return $message->reply($msg);
-    }
-    if (str_starts_with($message_content_lower, 'brmedals')) {
-        if (! $ckey = trim(str_replace(['.', '_', ' '], '', substr($message_content_lower, strlen('brmedals'))))) return $message->reply('Wrong format. Please try `brmedals [ckey]`.');
-        if (! $msg = $brmedals($DF13, $ckey)) return $message->reply('There was an error trying to get your medals!');
-        return $msg;
+        $bans2update = [];
+        $oldlist = [];
+                
+        foreach (explode("|||\n", $banlogs) as $bsplit)
+            foreach ($arr = explode(';', $bsplit) as $ban) //position 10 is cid, 11 is ip, starting on 1
+                 if ($ban[10] == '0' || $ban[11] == '0') $bans2update[$ban[4]] = $bsplit;
+                 else $oldlist[] = $bsplit;
+        
+        foreach (explode("|||\n", $loglocs) as $lsplit)
+            foreach (explode(';', $lsplit) as $log)
+                if (isset($bans2update[$log[1]]))
+                    foreach ($bans2update as $b2)
+                        if($log[1] == $b2[1]) {
+                            $bans2update[$log[1]][10] = $log[2];
+                            $bans2update[$log[1]][11] = $log[3];
+                        }
+        file_put_contents($DF13->files['bans'], implode('|||' . PHP_EOL, array_merge($oldlist, array_values($bans2update))));
+        return $message->react("👍");
     }
     
 };
 
-$nomads_discord2ooc = function (DF13 $DF13, $author, $string): bool
+$discord2ooc = function (DF13 $DF13, $author, $string): bool
 {
-    if (! $file = fopen($DF13->files['nomads_discord2ooc'], 'a')) return false;
+    if (! $file = fopen($DF13->files['discord2ooc'], 'a')) return false;
     fwrite($file, "$author:::$string" . PHP_EOL);
     fclose($file);
     return true; 
 };
-$tdm_discord2ooc = function (DF13 $DF13, $author, $string): bool
+$discord2admin = function (DF13 $DF13, $author, $string): bool
 {
-    if (! $file = fopen($DF13->files['tdm_discord2ooc'], 'a')) return false;
-    fwrite($file, "$author:::$string" . PHP_EOL);
-    fclose($file);
-    return true; 
-};
-$nomads_discord2admin = function (DF13 $DF13, $author, $string): bool
-{
-    if (! $file = fopen($DF13->files['nomads_discord2admin'], 'a')) return false;
+    if (! $file = fopen($DF13->files['discord2admin'], 'a')) return false;
     fwrite($file, "$author:::$string" . PHP_EOL);
     fclose($file);
     return true;
 };
-$tdm_discord2admin = function (DF13 $DF13, $author, $string): bool
+$discord2dm = function (DF13 $DF13, $author, $string): bool
 {
-    if (! $file = fopen($DF13->files['tdm_discord2admin'], 'a')) return false;
+    if (! $file = fopen($DF13->files['discord2dm'], 'a')) return false;
     fwrite($file, "$author:::$string" . PHP_EOL);
     fclose($file);
     return true;
 };
-$nomads_discord2dm = function (DF13 $DF13, $author, $string): bool
-{
-    if (! $file = fopen($DF13->files['nomads_discord2dm'], 'a')) return false;
-    fwrite($file, "$author:::$string" . PHP_EOL);
-    fclose($file);
-    return true;
-};
-$tdm_discord2dm = function (DF13 $DF13, $author, $string): bool
-{
-    if (! $file = fopen($DF13->files['tdm_discord2dm'], 'a')) return false;
-    fwrite($file, "$author:::$string" . PHP_EOL);
-    fclose($file);
-    return true;
-};
-$on_message = function (DF13 $DF13, $message) use ($guild_message, $nomads_discord2ooc, $tdm_discord2ooc, $nomads_discord2admin, $tdm_discord2admin, $nomads_discord2dm, $tdm_discord2dm)
+$on_message = function (DF13 $DF13, $message) use ($guild_message, $discord2ooc, $discord2admin, $discord2dm)
 { // on message
     if ($message->guild->owner_id != $DF13->owner_id) return; //Only process commands from a guild that Taislin owns
     if (! $DF13->command_symbol) $DF13->command_symbol = '!s';
@@ -777,7 +450,7 @@ $on_message = function (DF13 $DF13, $message) use ($guild_message, $nomads_disco
     if (! $message_content) return;
     
     if (str_starts_with($message_content_lower, 'ping')) return $message->reply('Pong!');
-    if (str_starts_with($message_content_lower, 'help')) return $message->reply('**List of Commands**: bancheck, insult, cpu, ping, (un)whitelistme, rankme, ranking. **Staff only**: ban, hostnomads, killnomads, restartnomads, mapswapnomads, hosttdm, killtdm, restarttdm, mapswaptdm');
+    if (str_starts_with($message_content_lower, 'help')) return $message->reply('**List of Commands**: bancheck, insult, cpu, ping, (un)whitelistme, rankme, ranking. **Staff only**: ban, hostdf, killdf, restartdf, mapswapdf');
     if (str_starts_with($message_content_lower, 'cpu')) {
          if (PHP_OS_FAMILY == "Windows") {
             $p = shell_exec('powershell -command "gwmi Win32_PerfFormattedData_PerfOS_Processor | select PercentProcessorTime"');
@@ -826,47 +499,38 @@ $on_message = function (DF13 $DF13, $message) use ($guild_message, $nomads_disco
     if (str_starts_with($message_content_lower, 'ooc ')) {
         $message_filtered = substr($message_content, 4);
         switch (strtolower($message->channel->name)) {
-            case 'ooc-nomads':                    
-                if (! $nomads_discord2ooc($DF13, $message->author->displayname, $message_filtered)) return $message->react("🔥");
-                return $message->react("📧");
-            case 'ooc-tdm':
-                if (! $tdm_discord2ooc($DF13, $message->author->displayname, $message_filtered)) return $message->react("🔥");
+            case 'ooc': 
+                if (! $discord2ooc($DF13, $message->author->displayname, $message_filtered)) return $message->react("🔥");
                 return $message->react("📧");
             default:
-                return $message->reply('You need to be in either the #ooc-nomads or #ooc-tdm channel to use this command.');
+                return $message->reply('You need to be in the #ooc channel to use this command.');
         }
     }
     if (str_starts_with($message_content_lower, 'asay ')) {
         $message_filtered = substr($message_content, 5);
         switch (strtolower($message->channel->name)) {
-            case 'ahelp-nomads':
-                if (! $nomads_discord2admin($DF13, $message->author->displayname, $message_filtered)) return $message->react("🔥");
-                return $message->react("📧");
-            case 'ahelp-tdm':
-                if (! $tdm_discord2admin($DF13, $message->author->displayname, $message_filtered)) return $message->react("🔥");
+            case 'ahelp':
+                if (! $discord2admin($DF13, $message->author->displayname, $message_filtered)) return $message->react("🔥");
                 return $message->react("📧");
             default:
-                return $message->reply('You need to be in either the #ahelp-nomads or #ahelp-tdm channel to use this command.');
+                return $message->reply('You need to be in the #ahelp channel to use this command.');
         }
     }
     if (str_starts_with($message_content_lower, 'dm ') || str_starts_with($message_content_lower, 'pm ')) {
         $split_message = explode(': ', substr($message_content, 3));
         switch (strtolower($message->channel->name)) {
-            case 'ahelp-nomads':
-                if (! $nomads_discord2dm($DF13, $message->author->displayname, $split_message)) return $message->react("🔥");
-                return $message->react("📧");
-            case 'ahelp-tdm':
-                if (! $tdm_discord2dm($DF13, $message->author->displayname, $split_message)) return $message->react("🔥");
+            case 'ahelp':
+                if (! $discord2dm($DF13, $message->author->displayname, $split_message)) return $message->react("🔥");
                 return $message->react("📧");
             default:
-                return $message->reply('You need to be in either the #ahelp-nomads or #ahelp-tdm channel to use this command.');
+                return $message->reply('You need to be in the #ahelp channel to use this command.');
         }
     }
     if (str_starts_with($message_content_lower, 'bancheck')) {
         if (! $ckey = trim(str_replace(['.', '_', ' '], '', substr($message_content_lower, strlen('bancheck'))))) return $message->reply('Wrong format. Please try `bancheck [ckey]`.');
-        $banreason = "unknown";
+        $reason = "unknown";
         $found = false;
-        if ($filecheck1 = fopen($DF13->files['nomads_bans'], 'r')) {
+        if ($filecheck1 = fopen($DF13->files['bans'], 'r')) {
             while (($fp = fgets($filecheck1, 4096)) !== false) {
                 $linesplit = explode(';', trim(str_replace('|||', '', $fp))); //$split_ckey[0] is the ckey
                 if ((count($linesplit)>=8) && ($linesplit[8] == strtolower($ckey))) {
@@ -875,43 +539,31 @@ $on_message = function (DF13 $DF13, $message) use ($guild_message, $nomads_disco
                     $reason = $linesplit[3];
                     $admin = $linesplit[4];
                     $date = $linesplit[5];
-                    $message->reply("**$ckey** has been **$type** banned from **Nomads** on **$date** for **$reason** by $admin.");
+                    $message->reply("**$ckey** has been **$type** banned from **DF13** on **$date** for **$reason** by $admin.");
                 }
             }
             fclose($filecheck1);
         }
-        if ($filecheck2 = fopen($DF13->files['tdm_bans'], 'r')) {
-            while (($fp = fgets($filecheck2, 4096)) !== false) {
-                $linesplit = explode(';', trim(str_replace('|||', '', $fp))); //$split_ckey[0] is the ckey
-                if ((count($linesplit)>=8) && ($linesplit[8] == strtolower($ckey))) {
-                    $found = true;
-                    $reason = $linesplit[3];
-                    $admin = $linesplit[4];
-                    $date = $linesplit[5];
-                    $message->reply("**$ckey** has been banned from **TDM** on **$date** for **$reason** by $admin.");
-                }
-            }
-            fclose($filecheck2);
-        }
         if (! $found) return $message->reply("No bans were found for **$ckey**.");
         return;
     }
-    if (str_starts_with($message_content_lower, 'serverstatus')) { //See GitHub Issue #1
+    if (str_starts_with($message_content_lower, 'serverstatus')) { //This method is bad and should stay disabled
+        return;
         $embed = new Embed($DF13->discord);
-        $_1714 = !\portIsAvailable(1714);
-        $server_is_up = $_1714;
+        $_7778 = !\portIsAvailable(7778);
+        $server_is_up = ($_7778);
         if (! $server_is_up) {
             $embed->setColor(0x00ff00);
-            $embed->addFieldValues('TDM Server Status', 'Offline');
+            $embed->addFieldValues('DF13 Server Status', 'Offline');
         } else {
-            if ($_1714) {
-                if (! $data = file_get_contents($DF13->files['tdm_serverdata'])) {
+            if ($_7778) {
+                if (! $data = file_get_contents($DF13->files['serverdata'])) {
                     $embed->setColor(0x00ff00);
-                    $embed->addFieldValues('TDM Server Status', 'Starting');
+                    $embed->addFieldValues('DF13 Server Status', 'Starting');
                 } else {
                     $data = explode(';', str_replace(['<b>Address</b>: ', '<b>Map</b>: ', '<b>Gamemode</b>: ', '<b>Players</b>: ', '</b>', '<b>'], '', $data));
                     $embed->setColor(0x00ff00);
-                    $embed->addFieldValues('TDM Server Status', 'Online');
+                    $embed->addFieldValues('DF13 Server Status', 'Online');
                     if (isset($data[1])) $embed->addFieldValues('Address', '<'.$data[1].'>');
                     if (isset($data[2])) $embed->addFieldValues('Map', $data[2]);
                     if (isset($data[3])) $embed->addFieldValues('Gamemode', $data[3]);
@@ -919,31 +571,7 @@ $on_message = function (DF13 $DF13, $message) use ($guild_message, $nomads_disco
                 }
             } else {
                 $embed->setColor(0x00ff00);
-                $embed->addFieldValues('TDM Server Status', 'Offline');
-            }
-        }
-        $_1715 = !\portIsAvailable(1715);
-        $server_is_up = ($_1715);
-        if (! $server_is_up) {
-            $embed->setColor(0x00ff00);
-            $embed->addFieldValues('Nomads Server Status', 'Offline');
-        } else {
-            if ($_1714) {
-                if (! $data = file_get_contents($DF13->files['nomads_serverdata'])) {
-                    $embed->setColor(0x00ff00);
-                    $embed->addFieldValues('Nomads Server Status', 'Starting');
-                } else {
-                    $data = explode(';', str_replace(['<b>Address</b>: ', '<b>Map</b>: ', '<b>Gamemode</b>: ', '<b>Players</b>: ', '</b>', '<b>'], '', $data));
-                    $embed->setColor(0x00ff00);
-                    $embed->addFieldValues('Nomads Server Status', 'Online');
-                    if (isset($data[1])) $embed->addFieldValues('Address', '<'.$data[1].'>');
-                    if (isset($data[2])) $embed->addFieldValues('Map', $data[2]);
-                    if (isset($data[3])) $embed->addFieldValues('Gamemode', $data[3]);
-                    if (isset($data[4])) $embed->addFieldValues('Players', $data[4]);
-                }
-            } else {
-                $embed->setColor(0x00ff00);
-                $embed->addFieldValues('Nomads Server Status', 'Offline');
+                $embed->addFieldValues('DF13 Server Status', 'Offline');
             }
         }
         return $message->channel->sendEmbed($embed);
@@ -967,53 +595,20 @@ $on_message = function (DF13 $DF13, $message) use ($guild_message, $nomads_disco
         return $message->reply("`$id` is not registered to any discord id ($age)");
     }
     
-    if (str_starts_with($message_content_lower, 'update bans')) {
-        if (! $rank_check($DF13, $message, ['admiral', 'captain'])) return $message->react("❌"); 
-        if (! $banlogs = file_get_contents($DF13->files['tdm_bans'])) return $message->react("🔥");
-        if (! $loglocs = file_get_contents($DF13->files['tdm_playerlogs'])) return $message->react("🔥");
-        
-        $bans2update = [];
-        $oldlist = [];
-                
-        foreach (explode("|||\n", $banlogs) as $bsplit)
-            foreach ($arr = explode(';', $bsplit) as $ban) //position 10 is cid, 11 is ip, starting on 1
-                 if ($ban[10] == '0' || $ban[11] == '0') $bans2update[$ban[4]] = $bsplit;
-                 else $oldlist[] = $bsplit;
-        
-        foreach (explode("|||\n", $loglocs) as $lsplit)
-            foreach (explode(';', $lsplit) as $log)
-                if (isset($bans2update[$log[1])
-                    foreach ($bans2update as $b2)
-                        if($log[1] == $b2[1]) {
-                            $bans2update[$log[1]][10] = $log[2];
-                            $bans2update[$log[1]][11] = $log[3];
-                        }
-        file_put_contents($DF13->files['tdm_bans'], implode('|||' . PHP_EOL, array_merge($oldlist, array_values($bans2update))));
-        return $message->react("👍");
-    }
-    
     if ($message->member && $guild_message($DF13, $message, $message_content, $message_content_lower)) return;
 };
 
 $bancheck = function (DF13 $DF13, string $ckey): bool
 {
     $return = false;
-    if ($filecheck1 = fopen($DF13->files['nomads_bans'], 'r')) {
+    if ($filecheck1 = fopen($DF13->files['bans'], 'r')) {
         while (($fp = fgets($filecheck1, 4096)) !== false) {
             //str_replace(PHP_EOL, '', $fp); // Is this necessary?
             $linesplit = explode(';', trim(str_replace('|||', '', $fp))); //$split_ckey[0] is the ckey
             if ((count($linesplit)>=8) && ($linesplit[8] == $ckey)) $return = true;
         }
         fclose($filecheck1);
-    } else $DF13->logger->warning("unable to open `{$DF13->files['nomads_bans']}`");
-    if ($filecheck2 = fopen($DF13->files['tdm_bans'], 'r')) {
-        while (($fp = fgets($filecheck2, 4096)) !== false) {
-            //str_replace(PHP_EOL, '', $fp); // Is this necessary?
-            $linesplit = explode(';', trim(str_replace('|||', '', $fp))); //$split_ckey[0] is the ckey
-            if ((count($linesplit)>=8) && ($linesplit[8] == $ckey)) $return = true;
-        }
-        fclose($filecheck2);
-    } else $DF13->logger->warning("unable to open `{$DF13->files['tdm_bans']}`");
+    } else $DF13->logger->warning("unable to open `{$DF13->files['bans']}`");
     return $return;
 };
 $bancheck_join = function (DF13 $DF13, $member) use ($bancheck): void
@@ -1024,7 +619,7 @@ $bancheck_join = function (DF13 $DF13, $member) use ($bancheck): void
         });
     }
 };
-$slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart_tdm, $restart_nomads, $ranking, $rankme, $medals, $brmedals): void
+$slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart, $ranking, $rankme, $medals, $brmedals): void
 { //ready_slash
     //if ($command = $commands->get('name', 'ping')) $commands->delete($command->id);
     if (! $commands->get('name', 'ping')) $commands->save(new Command($DF13->discord, [
@@ -1136,20 +731,11 @@ $slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart_
             'default_member_permissions' => (string) new RolePermission($DF13->discord, ['moderate_members' => true]),
         ]));
         
-        //if ($command = $commands->get('name', 'restart_nomads')) $commands->delete($command->id);
-        if (! $commands->get('name', 'restart_nomads')) $commands->save(new Command($DF13->discord, [
+        //if ($command = $commands->get('name', 'restart')) $commands->delete($command->id);
+        if (! $commands->get('name', 'restart')) $commands->save(new Command($DF13->discord, [
             'type' => Command::CHAT_INPUT,
-            'name' => 'restart_nomads',
-            'description' => 'Restart the Nomads server',
-            'dm_permission' => false,
-            'default_member_permissions' => (string) new RolePermission($DF13->discord, ['view_audit_log' => true]),
-        ]));
-        
-        //if ($command = $commands->get('name', 'restart tdm')) $commands->delete($command->id);
-        if (! $commands->get('name', 'restart_tdm')) $commands->save(new Command($DF13->discord, [
-            'type' => Command::CHAT_INPUT,
-            'name' => 'restart_tdm',
-            'description' => 'Restart the TDM server',
+            'name' => 'restart',
+            'description' => 'Restart the DF13 server',
             'dm_permission' => false,
             'default_member_permissions' => (string) new RolePermission($DF13->discord, ['view_audit_log' => true]),
         ]));
@@ -1194,9 +780,10 @@ $slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart_
         $server_info[1] = ['name' => 'Nomads', 'host' => 'Taislin', 'link' => "<byond://{$DF13->ips['nomads']}:{$DF13->ports['nomads']}>"];
         $server_info[2] = ['name' => 'Persistence', 'host' => 'ValZarGaming', 'link' => "<byond://{$DF13->ips['vzg']}:{$DF13->ports['persistence']}>"];
         $server_info[3] = ['name' => 'Blue Colony', 'host' => 'ValZarGaming', 'link' => "<byond://{$DF13->ips['vzg']}:{$DF13->ports['bc']}>"];
+        $server_info[4] = ['name' => 'Pocket Stronghold 13', 'host' => 'ValZarGaming', 'link' => "<byond://{$DF13->ips['vzg']}:{$DF13->ports['df']}>"];
         
         $embed = new Embed($DF13->discord);
-        foreach ($data_json as $server) {
+        foreach ($data_json as $server) { // Loop through each server, doesn't output new servers until they've been added to the website's API
             $server_info_hard = array_shift($server_info);
             if (array_key_exists('ERROR', $server)) continue;
             if (isset($server_info_hard['name'])) $embed->addFieldValues('Server', $server_info_hard['name'] . PHP_EOL . $server_info_hard['link'], false);
@@ -1244,33 +831,9 @@ $slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart_
         $unban($DF13, $item['ss13'], $interaction->user->displayname);
     });
     
-    $DF13->discord->listenCommand('restart_nomads', function ($interaction) use ($DF13, $restart_nomads) {
-    $interaction->respondWithMessage(MessageBuilder::new()->setContent("Attempted to kill, update, and bring up Nomads <byond://{$DF13->ips['tdm']}:{$DF13->ports['tdm']}>"));
-        $restart_nomads($DF13);
-    });
-    $DF13->discord->listenCommand('restart_tdm', function ($interaction) use ($DF13, $restart_tdm) {
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent("Attempted to kill, update, and bring up TDM <byond://{$DF13->ips['tdm']}:{$DF13->ports['tdm']}>"));
-        $restart_tdm($DF13);
-    });
-    
-    $DF13->discord->listenCommand('ranking', function ($interaction) use ($DF13, $ranking) {
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent($ranking($DF13)), true);
-    });
-    $DF13->discord->listenCommand('rankme', function ($interaction) use ($DF13, $rankme) {
-        if (! $item = $DF13->verified->get('discord', $interaction->member->id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent($rankme($DF13, $item['ss13'])), true);
-    });
-    $DF13->discord->listenCommand('rank', function ($interaction) use ($DF13, $rankme) {
-        if (! $item = $DF13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent($rankme($DF13, $item['ss13'])), true);
-    });
-    $DF13->discord->listenCommand('medals', function ($interaction) use ($DF13, $medals) {
-        if (! $item = $DF13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent($medals($DF13, $item['ss13'])), true);
-    });
-    $DF13->discord->listenCommand('brmedals', function ($interaction) use ($DF13, $brmedals) {
-        if (! $item = $DF13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent($brmedals($DF13, $item['ss13'])), true);
+    $DF13->discord->listenCommand('restart', function ($interaction) use ($DF13, $restart) {
+    $interaction->respondWithMessage(MessageBuilder::new()->setContent("Attempted to kill, update, and bring up DF13 <byond://{$DF13->ips['vzg']}:{$DF13->ports['df']}>"));
+        $restart($DF13);
     });
     /*For deferred interactions
     $DF13->discord->listenCommand('',  function (Interaction $interaction) use ($DF13) {
@@ -1318,10 +881,8 @@ $ooc_relay = function (DF13 $DF13, string $file_path, $channel) use ($ban): bool
 $timer_function = function (DF13 $DF13) use ($ooc_relay): void
 {
         if ($guild = $DF13->discord->guilds->get('id', $DF13->DF13_guild_id)) { 
-        if ($channel = $guild->channels->get('id', $DF13->channel_ids['nomads_ooc_channel']))$ooc_relay($DF13, $DF13->files['nomads_ooc_path'], $channel);  // #ooc-nomads
-        if ($channel = $guild->channels->get('id', $DF13->channel_ids['nomads_admin_channel'])) $ooc_relay($DF13, $DF13->files['nomads_admin_path'], $channel);  // #ahelp-nomads
-        if ($channel = $guild->channels->get('id', $DF13->channel_ids['tdm_ooc_channel'])) $ooc_relay($DF13, $DF13->files['tdm_ooc_path'], $channel);  // #ooc-tdm
-        if ($channel = $guild->channels->get('id', $DF13->channel_ids['tdm_admin_channel'])) $ooc_relay($DF13, $DF13->files['tdm_admin_path'], $channel);  // #ahelp-tdm
+        if ($channel = $guild->channels->get('id', $DF13->channel_ids['ooc_channel']))$ooc_relay($DF13, $DF13->files['ooc_path'], $channel);  // #ooc
+        if ($channel = $guild->channels->get('id', $DF13->channel_ids['admin_channel'])) $ooc_relay($DF13, $DF13->files['admin_path'], $channel);  // #ahelp
     }
 };
 $on_ready = function (DF13 $DF13) use ($timer_function): void

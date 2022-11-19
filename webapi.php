@@ -256,16 +256,16 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             $return = '';
             break;
         
-        case 'nomads':
+        case 'df13':
             switch ($id) {
                 case 'bans':
                     if (! $whitelisted) {
                         $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                         return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
                     }
-                    $nomads_bans = $DF13->files['nomads_bans'];
-                    if ($return = file_get_contents($nomads_bans)) return new Response(200, ['Content-Type' => 'text/plain'], $return);
-                    else return new Response(501, ['Content-Type' => 'text/plain'], "Unable to access `$nomads_bans`");
+                    $bans = $DF13->files['bans'];
+                    if ($return = file_get_contents($bans)) return new Response(200, ['Content-Type' => 'text/plain'], $return);
+                    else return new Response(501, ['Content-Type' => 'text/plain'], "Unable to access `$bans`");
                     break;
                 default:
                     return new Response(501, ['Content-Type' => 'text/plain'], 'Not implemented');

@@ -52,7 +52,7 @@ include 'variable_functions.php';
 include 'verifier_functions.php';
 include 'DF13.php';
 
-$options = array(
+$options = array( //All these file paths need to be updated for DF13
     'loop' => $loop,
     'discord' => $discord,
     'browser' => $browser,
@@ -63,9 +63,9 @@ $options = array(
     //Configurations
     'github' => 'https://github.com/VZGCoders/DF13-bot',
     'command_symbol' => '!s',
-    'owner_id' => '196253985072611328', //Taislin
-    'DF13_guild_id' => '468979034571931648', //DF13
-    'verifier_feed_channel_id' => '1032411190695055440', //Channel VZG Verifier webhooks verification messages to
+    'owner_id' => '116927250145869826', //Valithor
+    'DF13_guild_id' => '1043390003285344306', //DF13
+    'verifier_feed_channel_id' => '1043390006150053947', //Channel VZG Verifier webhooks verification messages to
     'files' => array(
         //Fun
         'insults_path' => 'insults.txt',
@@ -75,69 +75,41 @@ $options = array(
         //Defines
         'map_defines_path' => '/home/1713/DF13-git/code/__defines/maps.dm',
         
-        //Nomads
-        'nomads_log_basedir' => '/home/1713/DF13-rp/data/logs',
-        'nomads_ooc_path' => '/home/1713/DF13-rp/ooc.log',
-        'nomads_admin_path' => '/home/1713/DF13-rp/admin.log',
-        'nomads_discord2ooc' => '/home/1713/DF13-rp/SQL/discord2ooc.txt',
-        'nomads_discord2admin' => '/home/1713/DF13-rp/SQL/discord2admin.txt',
-        'nomads_discord2dm' => '/home/1713/DF13-rp/SQL/discord2dm.txt',
-        'nomads_discord2ban' => '/home/1713/DF13-rp/SQL/discord2ban.txt',
-        'nomads_discord2unban' => '/home/1713/DF13-rp/SQL/discord2unban.txt',
-        'nomads_whitelist' => '/home/1713/DF13-rp/SQL/whitelist.txt',
-        'nomads_bans' => '/home/1713/DF13-rp/SQL/bans.txt',
+        //DF13
+        'log_basedir' => '/home/1713/DF13-rp/data/logs',
+        'ooc_path' => '/home/1713/DF13-rp/ooc.log',
+        'admin_path' => '/home/1713/DF13-rp/admin.log',
+        'discord2ooc' => '/home/1713/DF13-rp/SQL/discord2ooc.txt',
+        'discord2admin' => '/home/1713/DF13-rp/SQL/discord2admin.txt',
+        'discord2dm' => '/home/1713/DF13-rp/SQL/discord2dm.txt',
+        'discord2ban' => '/home/1713/DF13-rp/SQL/discord2ban.txt',
+        'discord2unban' => '/home/1713/DF13-rp/SQL/discord2unban.txt',
+        'whitelist' => '/home/1713/DF13-rp/SQL/whitelist.txt',
+        'bans' => '/home/1713/DF13-rp/SQL/bans.txt',
         
-        //TDM
-        'tdm_log_basedir' => '/home/1713/DF13-tdm/data/logs',
-        'tdm_ooc_path' => '/home/1713/DF13-tdm/ooc.log',
-        'tdm_admin_path' => '/home/1713/DF13-tdm/admin.log',
-        'tdm_discord2ooc' => '/home/1713/DF13-tdm/SQL/discord2ooc.txt',
-        'tdm_discord2admin' => '/home/1713/DF13-tdm/SQL/discord2admin.txt',
-        'tdm_discord2dm' => '/home/1713/DF13-tdm/SQL/discord2dm.txt',
-        'tdm_discord2ban' => '/home/1713/DF13-tdm/SQL/discord2ban.txt',
-        'tdm_discord2unban' => '/home/1713/DF13-tdm/SQL/discord2unban.txt',
-        'tdm_discord2ban' => '/home/1713/DF13-tdm/SQL/discord2ban.txt',
-        'tdm_whitelist' => '/home/1713/DF13-tdm/SQL/whitelist.txt',
-        'tdm_bans' => '/home/1713/DF13-tdm/SQL/bans.txt',
-        'tdm_awards_path' => '/home/1713/DF13-tdm/SQL/awards.txt',
-        'tdm_awards_br_path' => '/home/1713/DF13-tdm/SQL/awards_br.txt',
-
         //Script paths
-        'nomads_updateserverabspaths' => '/home/1713/DF13-rp/scripts/updateserverabspaths.py',
-        'nomads_serverdata' => '/home/1713/DF13-rp/serverdata.txt',
-        'nomads_dmb' => '/home/1713/DF13-rp/DF13.dmb',
-        'nomads_killsudos' => '/home/1713/DF13-rp/scripts/killsudos.py',
-        'nomads_killDF13' => '/home/1713/DF13-rp/scripts/killDF13.py',
-        'nomads_mapswap' => '/home/1713/DF13-rp/scripts/mapswap.py',
-
-        'tdm_updateserverabspaths' => '/home/1713/DF13-tdm/scripts/updateserverabspaths.py',
-        'tdm_serverdata' => '/home/1713/DF13-tdm/serverdata.txt',
-        'tdm_dmb' => '/home/1713/DF13-tdm/DF13.dmb',
-        'tdm_killsudos' => '/home/1713/DF13-tdm/scripts/killsudos.py',
-        'tdm_killDF13' => '/home/1713/DF13-tdm/scripts/killDF13.py',
-        'mapswap_tdm' => '/home/1713/DF13-tdm/scripts/mapswap.py',
-
-        'typespess_path' => '/home/1713/DF13-typespess',
-        'typespess_launch_server_path' => 'scripts/launch_server.sh',
+        'updateserverabspaths' => '/home/1713/DF13-rp/scripts/updateserverabspaths.py',
+        'serverdata' => '/home/1713/DF13-rp/serverdata.txt',
+        'dmb' => '/home/1713/DF13-rp/DF13.dmb',
+        'killsudos' => '/home/1713/DF13-rp/scripts/killsudos.py',
+        'killDF13' => '/home/1713/DF13-rp/scripts/killDF13.py',
+        'mapswap' => '/home/1713/DF13-rp/scripts/mapswap.py',
         
          //Unused
-        'nomads_playerlogs' => '/home/1713/DF13-rp/SQL/playerlogs.txt',
-        'tdm_playerlogs' => '/home/1713/DF13-tdm/SQL/playerlogs.txt'
+        'playerlogs' => '/home/1713/DF13-rp/SQL/playerlogs.txt',
     ),
     'channel_ids' => array(
-        'nomads_ooc_channel' => '636644156923445269', //#ooc-nomads
-        'nomads_admin_channel' => '637046890030170126', //#ahelp-nomads
-        'tdm_ooc_channel' => '636644391095631872', //#ooc-tdm
-        'tdm_admin_channel' => '637046904575885322', //#ahelp-tdm
+        'ooc_channel' => '', //#ooc
+        'admin_channel' => '', //#ahelp
     ),
     'role_ids' => array(
-        'admiral' => '468980650914086913', //Host
-        'captain' => '792826030796308503', //Head admin
-        'knight' => '468982360659066912', //Admin
-        'veteran' => '468983261708681216', //Promoted
-        'infantry' => '468982790772228127', //Verified
-        'banished' => '710328377210306641', //Banned in-game (unused)
-        'paroled' => '745336314689355796', //On parole (unused)
+        'thane' => '1043390003381817362', //Host
+        'rune king' => '1043390003381817359', //Head admin
+        'longbeard' => '1043390003381817354', //Admin
+        'bearded' => '1043390003327291395', //Promoted
+        'unbearded' => '1043390003327291394', //Verified
+        'banished' => '1043390003327291397', //Banned in-game (unused)
+        'paroled' => '1043390003360837729', //On parole (unused)
     ),
     'functions' => array(
         'ready' => [
@@ -162,8 +134,6 @@ $options = array(
             'timer_function' => $timer_function,
             'status_changer' => $status_changer,
             'ban' => $ban,
-            'ban_nomads' => $ban_nomads,
-            'ban_tdm' => $ban_tdm,
             'browser_call' => $browser_call,
             'bancheck' => $bancheck,
             'verify_new' => $verify_new,
