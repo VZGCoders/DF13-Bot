@@ -11,7 +11,7 @@ $whitelist_update = function (DF13 $DF13, array $whitelists): bool
         ftruncate($file, 0); //Clear the file
         foreach ($DF13->verified as $item) {
             if (! $member = $guild->members->get('id', $item['discord'])) continue;
-            if (! $member->roles->has($DF13->role_ids['veteran'])) continue;
+            if (! $member->roles->has($DF13->role_ids['bearded'])) continue;
             fwrite($file, $item['ss13'] . ' = ' . $item['discord'] . PHP_EOL); //ckey = discord
         }
         fclose($file);
@@ -30,7 +30,7 @@ $df13_listeners = function (DF13 $DF13) use ($whitelist_update): void //Handles 
         $DF13->timers["add_{$member->id}"] = $DF13->discord->getLoop()->addTimer(8640, function() use ($DF13, $member) { //Kick member if they have not verified
             if (! $guild = $DF13->discord->guilds->get('id', $DF13->DF13_guild_id)) return;
             if (! $member_future = $guild->members->get('id', $member->id)) return;
-            if ($member_future->roles->has($DF13->role_ids['infantry']) || $member_future->roles->has($DF13->role_ids['veteran'])) return;
+            if ($member_future->roles->has($DF13->role_ids['unbearded']) || $member_future->roles->has($DF13->role_ids['bearded'])) return;
             return $guild->members->kick($member_future, 'Not verified');
         });
     });
@@ -38,15 +38,15 @@ $df13_listeners = function (DF13 $DF13) use ($whitelist_update): void //Handles 
     $DF13->discord->on('GUILD_MEMBER_REMOVE', function (Member $member) use ($DF13, $whitelist_update): void
     {
         $DF13->getVerified();
-        if ($member->roles->has($DF13->role_ids['veteran'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
+        if ($member->roles->has($DF13->role_ids['bearded'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
     });
     
     $DF13->discord->on('GUILD_MEMBER_UPDATE', function (Member $member, Discord $discord, ?Member $member_old) use ($DF13, $whitelist_update): void
     {
-        if ($member->roles->has($DF13->role_ids['veteran']) && ! $member_old->roles->has($DF13->role_ids['veteran'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
-        if (! $member->roles->has($DF13->role_ids['veteran']) && $member_old->roles->has($DF13->role_ids['veteran'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
-        if ($member->roles->has($DF13->role_ids['infantry']) && ! $member_old->roles->has($DF13->role_ids['infantry'])) $DF13->getVerified();;
-        if (! $member->roles->has($DF13->role_ids['infantry']) && $member_old->roles->has($DF13->role_ids['infantry'])) $DF13->getVerified();;
+        if ($member->roles->has($DF13->role_ids['bearded']) && ! $member_old->roles->has($DF13->role_ids['bearded'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
+        if (! $member->roles->has($DF13->role_ids['bearded']) && $member_old->roles->has($DF13->role_ids['bearded'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
+        if ($member->roles->has($DF13->role_ids['unbearded']) && ! $member_old->roles->has($DF13->role_ids['unbearded'])) $DF13->getVerified();;
+        if (! $member->roles->has($DF13->role_ids['unbearded']) && $member_old->roles->has($DF13->role_ids['unbearded'])) $DF13->getVerified();;
     });
 };
 
@@ -78,7 +78,7 @@ $promotable_check = function (DF13 $DF13, string $identifier): bool
 $mass_promotion_check = function (DF13 $DF13, $message) use ($promotable_check): array|false
 {
     if (! $guild = $DF13->discord->guilds->get('id', $DF13->DF13_guild_id)) return false;
-    if (! $members = $guild->members->filter(function ($member) use ($DF13) { return $member->roles->has($DF13->role_ids['infantry']); } )) return false;
+    if (! $members = $guild->members->filter(function ($member) use ($DF13) { return $member->roles->has($DF13->role_ids['unbearded']); } )) return false;
     $promotables = [];
     foreach ($members as $member) if ($promotable_check($DF13, $member->id)) $promotables[] = [(string) $member, $member->displayname, $DF13->verified->get('discord', $member->id)['ss13']];
     return $promotables;
@@ -86,12 +86,12 @@ $mass_promotion_check = function (DF13 $DF13, $message) use ($promotable_check):
 $mass_promotion_loop = function (DF13 $DF13) use ($promotable_check): bool // Not implemented
 {
     if (! $guild = $DF13->discord->guilds->get('id', $DF13->DF13_guild_id)) return false;
-    if (! $members = $guild->members->filter(function ($member) use ($DF13) { return $member->roles->has($DF13->role_ids['infantry']); } )) return false;;
+    if (! $members = $guild->members->filter(function ($member) use ($DF13) { return $member->roles->has($DF13->role_ids['unbearded']); } )) return false;;
     $promotables = [];
     foreach ($members as $member) if ($promotable_check($DF13, $member->id)) $promotables[] = $member;
     foreach ($promotables as $promoted) { //Promote eligible members
-        $role_ids = [$DF13->role_ids['veteran']];
-        foreach ($promoted->roles as $role) if ($role->id != $DF13->role_ids['infantry']) $role_ids[] = $role->id;
+        $role_ids = [$DF13->role_ids['bearded']];
+        foreach ($promoted->roles as $role) if ($role->id != $DF13->role_ids['unbearded']) $role_ids[] = $role->id;
         $promoted->setRoles($role_ids);
     }
     return true;

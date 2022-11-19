@@ -45,9 +45,9 @@ class DF13
     );
     
     public string $command_symbol = '!s';
-    public string $owner_id = '116927250145869826';
-    public string $DF13_guild_id = '1043390003285344306';
-    public string $verifier_feed_channel_id = '1043390006150053947';
+    public string $owner_id = '196253985072611328';
+    public string $DF13_guild_id = '468979034571931648';
+    public string $verifier_feed_channel_id = '1032411190695055440';
     public string $df13_token = '';
     
     public array $files = [];
@@ -401,7 +401,7 @@ class DF13
                 $success = true;
                 $message = "`$ckey` has been verified and registered to $discord_id";
                 $this->pending->offsetUnset($discord_id);
-                $this->discord->guilds->get('id', $this->DF13_guild_id)->members->get('id', $discord_id)->addRole($this->role_ids['infantry']);
+                $this->discord->guilds->get('id', $this->DF13_guild_id)->members->get('id', $discord_id)->addRole($this->role_ids['unbearded']);
                 $this->getVerified();
                 break;
             case 403: //Already registered
