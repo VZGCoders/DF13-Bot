@@ -129,7 +129,6 @@ $options = array(
             'bancheck_join' => $bancheck_join,
         ],
         'misc' => [ //Custom functions
-            'recalculate_ranking' => $recalculate_ranking,
             'ooc_relay' => $ooc_relay,
             'timer_function' => $timer_function,
             'status_changer' => $status_changer,
