@@ -22,7 +22,7 @@ $whitelist_update = function (DF13 $DF13, array $whitelists): bool
 $df13_listeners = function (DF13 $DF13) use ($whitelist_update): void //Handles Verified and Veteran cache and lists lists
 { //on ready
     $DF13->discord->on('message', function ($message) use ($DF13) {
-        if ($message->channel_id == $DF13->verifier_feed_channel_id) return $DF13->getVerified();
+        if ($message->channel_id == $DF13->verifier_feed_channel_id) $DF13->disacord->getLoop()->addTimer(2, function () use ($DF13) { return $DF13->getVerified(); });
     });
     
     $DF13->discord->on('GUILD_MEMBER_ADD', function (Member $member) use ($DF13): void
