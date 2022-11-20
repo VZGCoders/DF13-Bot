@@ -250,16 +250,19 @@ class DF13
     * It is also called when the bot receives a GUILD_MEMBER_REMOVE event
     * It is also called when the bot receives a GUILD_MEMBER_UPDATE event, but only if the user's roles have changed
     */
+    
+    public function getVerifiedUsers(): Collection
+    {
+        if ($guild = $this->discord->guilds->get('id', $this->DF13_guild_id)) return $collection->filter(function($v) use ($guild) { return $guild->members->has($v['discord']); });
+        return $this->verified;
+    }
     public function getVerified(): Collection
     {
         if ($verified_array = json_decode(file_get_contents('http://valzargaming.com/verified/'), true)) {
             $this->VarSave('verified.json', $verified_array);
-            $collection = new Collection($verified_array, 'discord');
-        } elseif ($json = $this->VarLoad('verified.json')) $collection = new Collection($json, 'discord');
+            return $this->verified = new Collection($verified_array, 'discord');
+        } elseif ($json = $this->VarLoad('verified.json')) return $this->verified = new Collection($json, 'discord');
         else return $this->verified = new Collection([], 'discord');
-        
-        if ($guild = $this->discord->guilds->get('id', $this->DF13_guild_id)) return $this->verified = $collection->filter(function($v) use ($guild) { return $guild->members->has($v['discord']); });
-        return $this->verified = $collection;
     }
     
     /*

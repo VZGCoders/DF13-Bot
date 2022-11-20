@@ -69,7 +69,7 @@ $promotable_check = function (DF13 $DF13, string $identifier): bool
 {
     if (! $DF13->verified && ! $DF13->getVerified()) return false; //Unable to get info from DB
     if (! $bancheck = $DF13->functions['misc']['bancheck']) return false;
-    if (! $item = $DF13->verified->get('ss13', htmlspecialchars($identifier)) ?? $DF13->verified->get('discord', str_replace(['<@', '<@!', '>'], '', $identifier))) return false; //a&e, ckey and/or discord id exists in DB and member is in the Discord server
+    if (! $item = $DF13->getVerifiedUsers()->get('ss13', htmlspecialchars($identifier)) ?? $DF13->getVerifiedUsers()->get('discord', str_replace(['<@', '<@!', '>'], '', $identifier))) return false; //a&e, ckey and/or discord id exists in DB and member is in the Discord server
     if (strtotime($item['create_time']) > strtotime('-1 year')) return false; //b, 1 year
     if (($item['seen_tdm'] + $item['seen_df13'] + $item['seen_pers'])<100) return false; //c, 100 seen
     if ($bancheck($DF13, $item['ss13'])) return false; //d, must not have active ban
