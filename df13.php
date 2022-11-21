@@ -243,26 +243,27 @@ class DF13
         if ($this->VarSave('discord_config.json', $discord_config)) $this->logger->info("Created new config for guild {$guild->name}");
         else $this->logger->warning("Failed top create new config for guild {$guild->name}");
     }
-
+    
+    public function getVerifiedUsers(): Collection
+    {
+        if ($guild = $this->discord->guilds->get('id', $this->DF13_guild_id)) return $this->verified->filter(function($v) use ($guild) { return $guild->members->has($v['discord']); });
+        return $this->verified;
+    }
+    
     /*
     * This function is used to refresh the bot's cache of verified users
     * It is called when the bot starts up, and when the bot receives a GUILD_MEMBER_ADD event
     * It is also called when the bot receives a GUILD_MEMBER_REMOVE event
     * It is also called when the bot receives a GUILD_MEMBER_UPDATE event, but only if the user's roles have changed
     */
-    
-    public function getVerifiedUsers(): Collection
-    {
-        if ($guild = $this->discord->guilds->get('id', $this->DF13_guild_id)) return $collection->filter(function($v) use ($guild) { return $guild->members->has($v['discord']); });
-        return $this->verified;
-    }
     public function getVerified(): Collection
     {
         if ($verified_array = json_decode(file_get_contents('http://valzargaming.com/verified/'), true)) {
             $this->VarSave('verified.json', $verified_array);
             return $this->verified = new Collection($verified_array, 'discord');
-        } elseif ($json = $this->VarLoad('verified.json')) return $this->verified = new Collection($json, 'discord');
-        else return $this->verified = new Collection([], 'discord');
+        }
+        if ($json = $this->VarLoad('verified.json')) return $this->verified = new Collection($json, 'discord');
+        return $this->verified = new Collection([], 'discord');
     }
     
     /*
