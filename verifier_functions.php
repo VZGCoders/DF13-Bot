@@ -22,7 +22,7 @@ $whitelist_update = function (DF13 $DF13, array $whitelists): bool
 $df13_listeners = function (DF13 $DF13) use ($whitelist_update): void //Handles Verified and Veteran cache and lists lists
 { //on ready
     $DF13->discord->on('message', function ($message) use ($DF13) {
-        if ($message->channel_id == $DF13->verifier_feed_channel_id) $DF13->disacord->getLoop()->addTimer(2, function () use ($DF13) { return $DF13->getVerified(); });
+        if ($message->channel_id == $DF13->verifier_feed_channel_id) $DF13->discord->getLoop()->addTimer(2, function () use ($DF13) { return $DF13->getVerified(); });
     });
     
     $DF13->discord->on('GUILD_MEMBER_ADD', function (Member $member) use ($DF13): void
@@ -98,5 +98,5 @@ $mass_promotion_loop = function (DF13 $DF13) use ($promotable_check): bool // No
 };
 $mass_promotion_timer = function (DF13 $DF13) use ($mass_promotion_loop): void //Not implemented
 {
-    $DF13->timers['mass_promotion_timer'] = $DF13->disacord->getLoop()->addPeriodicTimer(86400, function () use ($mass_promotion_loop) { $mass_promotion_loop; });
+    $DF13->timers['mass_promotion_timer'] = $DF13->discord->getLoop()->addPeriodicTimer(86400, function () use ($mass_promotion_loop) { $mass_promotion_loop; });
 };
