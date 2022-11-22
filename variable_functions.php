@@ -640,7 +640,7 @@ $slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart)
     ]));
     
     //if ($command = $commands->get('name', 'restart')) $commands->delete($command->id);
-    if (! $commands->get('name', 'restartbot')) $commands->save(new Command($DF13->discord, [
+    if (! $commands->get('name', 'restart')) $commands->save(new Command($DF13->discord, [
             'name' => 'restart',
             'description' => 'Restart the bot',
             'dm_permission' => false,
@@ -710,10 +710,10 @@ $slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart)
             'default_member_permissions' => (string) new RolePermission($DF13->discord, ['moderate_members' => true]),
         ]));
         
-        //if ($command = $commands->get('name', 'restart')) $commands->delete($command->id);
+        //if ($command = $commands->get('name', 'restartdf')) $commands->delete($command->id);
         if (! $commands->get('name', 'restartdf')) $commands->save(new Command($DF13->discord, [
             'type' => Command::CHAT_INPUT,
-            'name' => 'restart',
+            'name' => 'restartdf',
             'description' => 'Restart the DF13 server',
             'dm_permission' => false,
             'default_member_permissions' => (string) new RolePermission($DF13->discord, ['view_audit_log' => true]),
