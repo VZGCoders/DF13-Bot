@@ -623,12 +623,12 @@ $bancheck = function (DF13 $DF13, string $ckey): bool
     } else $DF13->logger->warning("unable to open `{$DF13->files['bans']}`");
     return $return;
 };
-$bancheck_join = function (DF13 $DF13, $member) use ($bancheck): void
-{ //on GUILD_MEMBER_ADD
-    if ($member->guild_id == $DF13->DF13_guild_id) if ($item = $DF13->verified->get('discord', $member->id)) if ($bancheck($DF13, $item['ss13'])) {
-        $DF13->discord->getLoop()->addTimer(30, function() use ($DF13, $member, $item) {
-            $member->setRoles([$DF13->role_ids['banished']], "bancheck join {$item['ss13']}");
-        });
+$join_roles = function (DF13 $DF13, $member) use ($bancheck)
+{
+    if ($member->guild_id != $DF13->DF13_guild_id) return;
+    if ($item = $DF13->verified->get('discord', $member->id)) {
+        if ($bancheck($DF13, $item['ss13'])) return $member->setroles([$DF13->role_ids['unbearded'], $DF13->role_ids['banished']], "bancheck join {$item['ss13']}");
+        return $member->setroles([$DF13->role_ids['unbearded']], "verified join {$item['ss13']}");
     }
 };
 $slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart): void

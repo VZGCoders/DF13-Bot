@@ -46,7 +46,7 @@ class DF13
     
     public string $command_symbol = '!s';
     public string $owner_id = '196253985072611328';
-    public string $DF13_guild_id = '468979034571931648';
+    public string $DF13_guild_id = '1043390003285344306';
     public string $verifier_feed_channel_id = '1032411190695055440';
     public string $df13_token = '';
     

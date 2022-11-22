@@ -126,7 +126,7 @@ $options = array(
             'on_message' => $on_message,
         ],
         'GUILD_MEMBER_ADD' => [
-            'bancheck_join' => $bancheck_join,
+            'join_roles' => $join_roles,
         ],
         'misc' => [ //Custom functions
             'ooc_relay' => $ooc_relay,
