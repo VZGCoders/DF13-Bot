@@ -38,13 +38,13 @@ $df13_listeners = function (DF13 $DF13) use ($whitelist_update): void //Handles 
     $DF13->discord->on('GUILD_MEMBER_REMOVE', function (Member $member) use ($DF13, $whitelist_update): void
     {
         $DF13->getVerified();
-        if ($member->roles->has($DF13->role_ids['bearded'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
+        if ($member->roles->has($DF13->role_ids['bearded'])) $whitelist_update($DF13, [$DF13->files['whitelist']]);
     });
     
     $DF13->discord->on('GUILD_MEMBER_UPDATE', function (Member $member, Discord $discord, ?Member $member_old) use ($DF13, $whitelist_update): void
     {
-        if ($member->roles->has($DF13->role_ids['bearded']) && ! $member_old->roles->has($DF13->role_ids['bearded'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
-        if (! $member->roles->has($DF13->role_ids['bearded']) && $member_old->roles->has($DF13->role_ids['bearded'])) $whitelist_update($DF13, [$DF13->files['whitelist'], $DF13->files['tdm_whitelist']]);
+        if ($member->roles->has($DF13->role_ids['bearded']) && ! $member_old->roles->has($DF13->role_ids['bearded'])) $whitelist_update($DF13, [$DF13->files['whitelist']]);
+        if (! $member->roles->has($DF13->role_ids['bearded']) && $member_old->roles->has($DF13->role_ids['bearded'])) $whitelist_update($DF13, [$DF13->files['whitelist']]);
         if ($member->roles->has($DF13->role_ids['unbearded']) && ! $member_old->roles->has($DF13->role_ids['unbearded'])) $DF13->getVerified();;
         if (! $member->roles->has($DF13->role_ids['unbearded']) && $member_old->roles->has($DF13->role_ids['unbearded'])) $DF13->getVerified();;
     });
