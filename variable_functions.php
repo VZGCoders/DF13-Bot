@@ -656,7 +656,10 @@ $serverinfo_parse = function ($DF13): array
     $index = 0;
     foreach ($data_json as $server) {
         $server_info_hard = array_shift($server_info);
-        if (array_key_exists('ERROR', $server)) continue;
+        if (array_key_exists('ERROR', $server)) {
+            $index++;
+            continue;
+        }
         if (isset($server_info_hard['name'])) $return[$index]['Server'] = [false => $server_info_hard['name'] . PHP_EOL . $server_info_hard['link']];
         if (isset($server_info_hard['host'])) $return[$index]['Host'] = [true => $server_info_hard['host']];
         //Round time
