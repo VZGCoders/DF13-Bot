@@ -627,11 +627,63 @@ $join_roles = function (DF13 $DF13, $member) use ($bancheck)
 {
     if ($member->guild_id != $DF13->DF13_guild_id) return;
     if ($item = $DF13->verified->get('discord', $member->id)) {
-        if ($bancheck($DF13, $item['ss13'])) return $member->setroles([$DF13->role_ids['unbearded'], $DF13->role_ids['banished']], "bancheck join {$item['ss13']}");
-        return $member->setroles([$DF13->role_ids['unbearded']], "verified join {$item['ss13']}");
+        if (! $bancheck($DF13, $item['ss13'])) return $member->setroles([$DF13->role_ids['unbearded']], "verified join {$item['ss13']}");
+        return $member->setroles([$DF13->role_ids['unbearded'], $DF13->role_ids['banished']], "bancheck join {$item['ss13']}");
     }
 };
-$slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart): void
+
+$serverinfo_fetch = function ($DF13): array
+{
+    if (! $data_json = json_decode(file_get_contents("http://{$DF13->ips['vzg']}/servers/serverinfo.json"),  true)) return [];
+    return $DF13->serverinfo = $data_json;
+};
+$serverinfo_timer = function ($DF13) use ($serverinfo_fetch): void
+{
+    $serverinfo_fetch($DF13);
+    $DF13->timers['serverinfo_timer'] = $DF13->discord->getLoop()->addPeriodicTimer(60, function() use ($DF13, $serverinfo_fetch) { $serverinfo_fetch($DF13); });
+};
+$serverinfo_parse = function ($DF13): array
+{
+    if (empty($data_json = $DF13->serverinfo)) return []; //update this to pull from the cache
+    $return = [];
+
+    $server_info[0] = ['name' => 'TDM', 'host' => 'Taislin', 'link' => "<byond://{$DF13->ips['civ13']}:{$DF13->ports['tdm']}>"];
+    $server_info[1] = ['name' => 'Nomads', 'host' => 'Taislin', 'link' => "<byond://{$DF13->ips['civ13']}:{$DF13->ports['nomads']}>"];
+    $server_info[2] = ['name' => 'Persistence', 'host' => 'ValZarGaming', 'link' => "<byond://{$DF13->ips['vzg']}:{$DF13->ports['persistence']}>"];
+    $server_info[3] = ['name' => 'Blue Colony', 'host' => 'ValZarGaming', 'link' => "<byond://{$DF13->ips['vzg']}:{$DF13->ports['bc']}>"];
+    $server_info[4] = ['name' => 'Pocket Stronghold 13', 'host' => 'ValZarGaming', 'link' => "<byond://{$DF13->ips['vzg']}:{$DF13->ports['df13']}>"];
+    
+    $index = 0;
+    foreach ($data_json as $server) {
+        $server_info_hard = array_shift($server_info);
+        if (array_key_exists('ERROR', $server)) continue;
+        if (isset($server_info_hard['name'])) $return[$index]['Server'] = [false => $server_info_hard['name'] . PHP_EOL . $server_info_hard['link']];
+        if (isset($server_info_hard['host'])) $return[$index]['Host'] = [true => $server_info_hard['host']];
+        //Round time
+        if (isset($server['roundduration'])) {
+            $rd = explode(":", urldecode($server['roundduration']));
+            $remainder = ($rd[0] % 24);
+            $rd[0] = floor($rd[0] / 24);
+            if ($rd[0] != 0 || $remainder != 0 || $rd[1] != 0) $rt = "{$rd[0]}d {$remainder}h {$rd[1]}m";
+            else $rt = 'STARTING';
+            $return[$index]['Round Timer'] = [true => $rt];
+        }
+        if (isset($server['map'])) $return[$index]['Map'] = [true => urldecode($server['map'])];
+        if (isset($server['age'])) $return[$index]['Epoch'] = [true => urldecode($server['age'])];
+        //Players
+        $players = [];
+        foreach (array_keys($server) as $key) {
+            $p = explode('player', $key); 
+            if (isset($p[1]) && is_numeric($p[1])) $players[] = str_replace(['.', '_', ' '], '', strtolower(urldecode($server[$key])));
+        }
+        if (! empty($players)) $return[$index]['Players (' . count($players) . ')'] = [true => implode(', ', $players)];
+        if (isset($server['season'])) $return[$index]['Season'] = [true => urldecode($server['season'])];
+        $index++;
+    }
+    return $return;
+};
+
+$slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart, $serverinfo_parse): void
 { //ready_slash
     //if ($command = $commands->get('name', 'ping')) $commands->delete($command->id);
     if (! $commands->get('name', 'ping')) $commands->save(new Command($DF13->discord, [
@@ -753,40 +805,13 @@ $slash_init = function (DF13 $DF13, $commands) use ($bancheck, $unban, $restart)
         $interaction->respondWithMessage(MessageBuilder::new()->setContent($DF13->discord->application->getInviteURLAttribute('8')), true);
     });
     
-    $DF13->discord->listenCommand('players', function ($interaction) use ($DF13) {
-        if (! $data_json = json_decode(file_get_contents("http://{$DF13->ips['vzg']}/servers/serverinfo.json"),  true)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent('Unable to fetch serverinfo.json, webserver might be down'), true);
-        $server_info[0] = ['name' => 'TDM', 'host' => 'Taislin', 'link' => "<byond://{$DF13->ips['civ13']}:{$DF13->ports['tdm']}>"];
-        $server_info[1] = ['name' => 'Nomads', 'host' => 'Taislin', 'link' => "<byond://{$DF13->ips['civ13']}:{$DF13->ports['nomads']}>"];
-        $server_info[2] = ['name' => 'Persistence', 'host' => 'ValZarGaming', 'link' => "<byond://{$DF13->ips['vzg']}:{$DF13->ports['persistence']}>"];
-        $server_info[3] = ['name' => 'Blue Colony', 'host' => 'ValZarGaming', 'link' => "<byond://{$DF13->ips['vzg']}:{$DF13->ports['bc']}>"];
-        $server_info[4] = ['name' => 'Pocket Stronghold 13', 'host' => 'ValZarGaming', 'link' => "<byond://{$DF13->ips['vzg']}:{$DF13->ports['df13']}>"];
-        
+    $DF13->discord->listenCommand('players', function ($interaction) use ($DF13, $serverinfo_parse) {
+        if (empty($data = $serverinfo_parse($DF13))) return $interaction->respondWithMessage(MessageBuilder::new()->setContent('Unable to fetch serverinfo.json, webserver might be down'), true);
         $embed = new Embed($DF13->discord);
-        foreach ($data_json as $server) {
-            $server_info_hard = array_shift($server_info);
-            if (array_key_exists('ERROR', $server)) continue;
-            if (isset($server_info_hard['name'])) $embed->addFieldValues('Server', $server_info_hard['name'] . PHP_EOL . $server_info_hard['link'], false);
-            if (isset($server_info_hard['host'])) $embed->addFieldValues('Host', $server_info_hard['host'], true);
-            //Round time
-            if (isset($server['roundduration'])) {
-                $rd = explode(":", urldecode($server['roundduration']));
-                $remainder = ($rd[0] % 24);
-                $rd[0] = floor($rd[0] / 24);
-                if ($rd[0] != 0 || $remainder != 0 || $rd[1] != 0) $rt = "{$rd[0]}d {$remainder}h {$rd[1]}m";
-                else $rt = 'STARTING';
-                $embed->addFieldValues('Round Timer', $rt, true);
-            }
-            if (isset($server['map'])) $embed->addFieldValues('Map', urldecode($server['map']), true);
-            if (isset($server['age'])) $embed->addFieldValues('Epoch', urldecode($server['age']), true);
-            //Players
-            $players = [];
-            foreach (array_keys($server) as $key) {
-                $p = explode('player', $key); 
-                if (isset($p[1]) && is_numeric($p[1])) $players[] = str_replace(['.', '_', ' '], '', strtolower(urldecode($server[$key])));
-            }
-            if (! empty($players)) $embed->addFieldValues('Players (' . count($players) . ')', implode(', ', $players), true);
-            if (isset($server['season'])) $embed->addFieldValues('Season', urldecode($server['season']), true);
-        }
+        foreach ($data as $server)
+             foreach ($server as $key => $array)
+                foreach ($array as $inline => $value)
+                    $embed->addFieldValues($key, $value, $inline);
         $embed->setFooter(($DF13->github ?  "{$DF13->github}" . PHP_EOL : '') . "{$DF13->discord->username} by Valithor#5947");
         $embed->setColor(0xe1452d);
         $embed->setTimestamp();

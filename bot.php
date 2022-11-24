@@ -118,6 +118,7 @@ $options = array(
             'status_changer_random' => $status_changer_random,
             'set_ips' => $set_ips,
             'df13_listeners' => $df13_listeners,
+            'serverinfo_timer' => $serverinfo_timer,
         ],
         'ready_slash' => [
             'slash_init' => $slash_init,
@@ -139,6 +140,7 @@ $options = array(
             'promotable_check' => $promotable_check,
             'mass_promotion_loop' => $mass_promotion_loop,
             'mass_promotion_check' => $mass_promotion_check,
+            'serverinfo_parse' => $serverinfo_parse,
         ],
     ),
 );
