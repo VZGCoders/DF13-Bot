@@ -1,12 +1,12 @@
 <?php
 
 /*
- * This file is a part of the DF13 project.
+ * This file is a part of the PS13 project.
  *
  * Copyright (c) 2022-present Valithor Obsidion <valithor@valzargaming.com>
  */
 
-namespace DF13;
+namespace PS13;
 
 use Discord\Discord;
 use Discord\Helpers\BigInt;
@@ -20,7 +20,7 @@ use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
 use React\Filesystem\Factory as FilesystemFactory;
 
-class DF13
+class PS13
 {
     public StreamSelectLoop $loop;
     public Discord $discord;
@@ -34,9 +34,9 @@ class DF13
     public collection $verified; //This probably needs a default value for Collection, maybe make it a Repository instead?
     public collection $pending;
     public $ages = []; //$ckey => $age, temporary cache to avoid spamming the Byond REST API, but we don't want to save it to a file because we also use it to check if the account still exists
-    public $serverinfo = []; //[index][key][inline => value], cached every minute by the serverinfo_fetch command
     
     public $timers = [];
+    public $serverinfo = [];
     
     public $functions = array(
         'ready' => [],
@@ -47,9 +47,9 @@ class DF13
     
     public string $command_symbol = '!s';
     public string $owner_id = '196253985072611328';
-    public string $DF13_guild_id = '1043390003285344306';
+    public string $PS13_guild_id = '1043390003285344306';
     public string $verifier_feed_channel_id = '1032411190695055440';
-    public string $df13_token = '';
+    public string $ps13_token = '';
     
     public array $files = [];
     public array $ips = [];
@@ -61,7 +61,7 @@ class DF13
     public array $tests = [];
     
     /**
-     * Creates a DF13 client instance.
+     * Creates a PS13 client instance.
      *
      * @param  array           $options Array of options.
      * @throws IntentException
@@ -92,9 +92,9 @@ class DF13
         if(isset($options['command_symbol'])) $this->command_symbol = $options['command_symbol'];
         if(isset($options['owner_id'])) $this->owner_id = $options['owner_id'];
         if(isset($options['github'])) $this->github = $options['github'];
-        if(isset($options['DF13_guild_id'])) $this->DF13_guild_id = $options['DF13_guild_id'];
+        if(isset($options['PS13_guild_id'])) $this->PS13_guild_id = $options['PS13_guild_id'];
         if(isset($options['verifier_feed_channel_id'])) $this->verifier_feed_channel_id = $options['verifier_feed_channel_id'];
-        if(isset($options['df13_token'])) $this->df13_token = $options['df13_token'];
+        if(isset($options['ps13_token'])) $this->ps13_token = $options['ps13_token'];
                 
         if(isset($options['discord'])) $this->discord = $options['discord'];
         elseif(isset($options['discord_options'])) $this->discord = new Discord($options['discord_options']);
@@ -163,7 +163,7 @@ class DF13
     protected function resolveOptions(array $options = []): array
     {
         if (is_null($options['logger'])) {
-            $logger = new Logger('DF13');
+            $logger = new Logger('PS13');
             $logger->pushHandler(new StreamHandler('php://stdout', Level::Debug));
             $options['logger'] = $logger;
         }
@@ -247,7 +247,7 @@ class DF13
     
     public function getVerifiedUsers(): Collection
     {
-        if ($guild = $this->discord->guilds->get('id', $this->DF13_guild_id)) return $this->verified->filter(function($v) use ($guild) { return $guild->members->has($v['discord']); });
+        if ($guild = $this->discord->guilds->get('id', $this->PS13_guild_id)) return $this->verified->filter(function($v) use ($guild) { return $guild->members->has($v['discord']); });
         return $this->verified;
     }
     
@@ -359,7 +359,7 @@ class DF13
     */
     public function verifyProcess(string $ckey, string $discord_id): string
     {
-        if ($this->verified->has($discord_id)) { $member = $this->discord->guilds->get('id', $this->DF13_guild_id)->members->get('id', $discord_id); if (! $member->roles->has($this->discord_config[$this->DF13_guild_id]['roles']['verified'])) $member->addRole($this->discord_config[$this->DF13_guild_id]['roles']['verified']); return 'You are already verified!';}
+        if ($this->verified->has($discord_id)) { $member = $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id); if (! $member->roles->has($this->discord_config[$this->PS13_guild_id]['roles']['verified'])) $member->addRole($this->discord_config[$this->PS13_guild_id]['roles']['verified']); return 'You are already verified!';}
         if ($this->verified->has($ckey)) return "`$ckey` is already verified!";
         if (! $this->pending->get('discord', $discord_id)) {
             if (! $age = $this->getByondAge($ckey)) return "Ckey `$ckey` does not exist!";
@@ -398,7 +398,7 @@ class DF13
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type' => 'application/x-www-form-urlencoded']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //return the transfer as a string    
         curl_setopt($ch, CURLOPT_POST, TRUE);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['token' => $this->df13_token, 'ckey' => $ckey, 'discord' => $discord_id]));
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(['token' => $this->ps13_token, 'ckey' => $ckey, 'discord' => $discord_id]));
         $result = curl_exec($ch);
         $http_status = curl_getinfo($ch, CURLINFO_HTTP_CODE); //Validate the website's HTTP response! 200 = success, 403 = ckey already registered, anything else is an error
         switch ($http_status) {
@@ -406,7 +406,7 @@ class DF13
                 $success = true;
                 $message = "`$ckey` has been verified and registered to $discord_id";
                 $this->pending->offsetUnset($discord_id);
-                $this->discord->guilds->get('id', $this->DF13_guild_id)->members->get('id', $discord_id)->addRole($this->role_ids['unbearded']);
+                $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id)->addRole($this->role_ids['unbearded']);
                 $this->getVerified();
                 break;
             case 403: //Already registered

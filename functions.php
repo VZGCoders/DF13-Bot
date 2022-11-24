@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is a part of the DF13 project.
+ * This file is a part of the PS13 project.
  *
  * Copyright (c) 2022-present Valithor Obsidion <valithor@valzargaming.com>
  */

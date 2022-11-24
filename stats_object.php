@@ -50,7 +50,7 @@ class Stats
     }
 
     /**
-     * Returns the current commit of DF13-Bot.
+     * Returns the current commit of PS13-Bot.
      *
      * @return string
      */

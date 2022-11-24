@@ -1,8 +1,8 @@
-DF13-Bot
+PS13-Bot
 ====
-[![Pocket Stronghold 13 Discord](https://discord.com/api/guilds/468979034571931648/widget.png?style=banner1)](https://DF13.com/discord)
+[![Pocket Stronghold 13 Discord](https://discord.com/api/guilds/468979034571931648/widget.png?style=banner1)](https://PS13.com/discord)
 
-The official [DF13](https://DF13.com) Discord bot built on DiscordPHP with documentation [available here](http://discord-php.github.io/DiscordPHP), albeit limited at the moment, as well as a class reference. Feel free to ask questions in the Discord server above.
+The official [PS13](https://PS13.com) Discord bot built on DiscordPHP with documentation [available here](http://discord-php.github.io/DiscordPHP), albeit limited at the moment, as well as a class reference. Feel free to ask questions in the Discord server above.
 
 ## Before you start
 
@@ -10,8 +10,8 @@ Before you start using this Library, you **need** to know how PHP works, you nee
 
 ## FAQ
 
-1. Can I run DF13-Bot on a webserver (e.g. Apache, nginx)?
-    - No, DF13-Bot will only run in CLI. If you want to have an interface for your bot you can integrate [react/http](https://github.com/ReactPHP/http) with your bot and run it through CLI.
+1. Can I run PS13-Bot on a webserver (e.g. Apache, nginx)?
+    - No, PS13-Bot will only run in CLI. If you want to have an interface for your bot you can integrate [react/http](https://github.com/ReactPHP/http) with your bot and run it through CLI.
 
 ## Getting Started
 
@@ -48,7 +48,7 @@ The path to the caextract must be set in the [`php.ini`](https://secure.php.net/
 - FFmpeg
 
 ### Basic Configuration
-The DF13 class intends to streamline the development process when using the DiscordPHP and other libraries while simultaneously avoiding bloating the main bot.php file with a bunch of function definitions. It accomplishes this by defining functions as variables and passing them into the construction method at runtime via the declaration of an $options array. Functions are to be declared either according to the DiscordPHP event they should execute and in the order they should be executed or as a miscellaneous function that can simply be stored and referenced later.
+The PS13 class intends to streamline the development process when using the DiscordPHP and other libraries while simultaneously avoiding bloating the main bot.php file with a bunch of function definitions. It accomplishes this by defining functions as variables and passing them into the construction method at runtime via the declaration of an $options array. Functions are to be declared either according to the DiscordPHP event they should execute and in the order they should be executed or as a miscellaneous function that can simply be stored and referenced later.
 
 ```php
 $options = array();
@@ -56,7 +56,7 @@ $options['functions'] = [
     'ready' => [ //Called automatically at start-up (Discord 'ready' event)
         'on_ready' => $on_ready,
         'status_changer_timer' => $status_changer_timer,
-        'status_changer_random' => $status_changer_random, //$status_changer_random = $DF13->functions->['ready']['status_changer_random']
+        'status_changer_random' => $status_changer_random, //$status_changer_random = $PS13->functions->['ready']['status_changer_random']
     ],
     'message' => [ //Called automatically whenever the bot sees a new message (Discord 'message' event)
         'on_message' => $on_message,
@@ -66,7 +66,7 @@ $options['functions'] = [
         'recalculate_ranking' => $recalculate_ranking,
         'ooc_relay' => $ooc_relay,
         'timer_function' => $timer_function,
-        'status_changer' => $status_changer, //$status_changer = $DF13->functions->['misc']['status_changer']
+        'status_changer' => $status_changer, //$status_changer = $PS13->functions->['misc']['status_changer']
     ],
 ];
 ```

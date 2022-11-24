@@ -1,12 +1,12 @@
 <?php
 
 /*
- * This file is a part of the DF13 project.
+ * This file is a part of the PS13 project.
  *
  * Copyright (c) 2022-present Valithor Obsidion <valithor@valzargaming.com>
  */
 
-use \DF13\DF13;
+use \PS13\PS13;
 use \Discord\Discord;
 use \React\EventLoop\Loop;
 use \WyriHaximus\React\Cache\Redis as RedisCache;
@@ -50,7 +50,7 @@ $filesystem = Filesystem::create($loop);
 include 'functions.php'; //execInBackground(), portIsAvailable()
 include 'variable_functions.php';
 include 'verifier_functions.php';
-include 'DF13.php';
+include 'PS13.php';
 
 $options = array(
     'loop' => $loop,
@@ -61,10 +61,10 @@ $options = array(
     'stats' => $stats,
     
     //Configurations
-    'github' => 'https://github.com/VZGCoders/DF13-bot',
+    'github' => 'https://github.com/VZGCoders/PS13-bot',
     'command_symbol' => '!s',
     'owner_id' => '116927250145869826', //Valithor
-    'DF13_guild_id' => '1043390003285344306', //DF13
+    'PS13_guild_id' => '1043390003285344306', //PS13
     'verifier_feed_channel_id' => '1043390006150053947', //Channel VZG Verifier webhooks verification messages to
     'files' => array(
         //Fun
@@ -73,9 +73,9 @@ $options = array(
         'status_path' => 'status.txt',
         
         //Defines
-        'map_defines_path' => 'C:/GitHub/Dwarf-Fortress-13/DF13-git/code/__defines/maps.dm',
+        'map_defines_path' => 'C:/GitHub/Dwarf-Fortress-13/PS13-git/code/__defines/maps.dm',
         
-        //DF13
+        //PS13
         'log_basedir' => 'C:/GitHub/Dwarf-Fortress-13/data/logs',
         'ooc_path' => 'C:/GitHub/Dwarf-Fortress-13/ooc.log',
         'admin_path' => 'C:/GitHub/Dwarf-Fortress-13/admin.log',
@@ -90,9 +90,9 @@ $options = array(
         //Script paths
         'updateserverabspaths' => 'C:/GitHub/Dwarf-Fortress-13/scripts/updateserverabspaths.py',
         'serverdata' => 'C:/GitHub/Dwarf-Fortress-13/serverdata.txt',
-        'dmb' => 'C:/GitHub/Dwarf-Fortress-13/DF13.dmb',
+        'dmb' => 'C:/GitHub/Dwarf-Fortress-13/PS13.dmb',
         'killsudos' => 'C:/GitHub/Dwarf-Fortress-13/scripts/killsudos.py',
-        'killDF13' => 'C:/GitHub/Dwarf-Fortress-13/scripts/killDF13.py',
+        'killPS13' => 'C:/GitHub/Dwarf-Fortress-13/scripts/killPS13.py',
         'mapswap' => 'C:/GitHub/Dwarf-Fortress-13/scripts/mapswap.py',
         
          //Unused
@@ -117,7 +117,7 @@ $options = array(
             'status_changer_timer' => $status_changer_timer,
             'status_changer_random' => $status_changer_random,
             'set_ips' => $set_ips,
-            'df13_listeners' => $df13_listeners,
+            'ps13_listeners' => $ps13_listeners,
             'serverinfo_timer' => $serverinfo_timer,
         ],
         'ready_slash' => [
@@ -144,7 +144,7 @@ $options = array(
         ],
     ),
 );
-if (include 'df13_token.php') $options['df13_token'] = $df13_token;
-$DF13 = new DF13($options);
+if (include 'ps13_token.php') $options['ps13_token'] = $ps13_token;
+$PS13 = new PS13($options);
 include 'webapi.php'; //$socket, $webapi, webapiFail(), webapiSnow();
-$DF13->run();
+$PS13->run();

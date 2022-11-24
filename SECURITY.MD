@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the [latest version](https://github.com/VZGCoders/DF13-Bot/releases) of DF13-Bot is supported.
+Only the [latest version](https://github.com/VZGCoders/PS13-Bot/releases) of PS13-Bot is supported.
 We generally don't support older versions due to maintenance effort and
 since we aim to provide a fairly stable upgrade path for new versions.
 
@@ -22,4 +22,4 @@ Please be patient while the vulnerability is being reviewed. Deploying the fix t
 can often take a little time due to the amount of preparation required, to ensure the vulnerability has
 been covered, and to create the content required to adequately notify the user-base.
 
-Thank you for keeping DF13-Bot instances safe!
+Thank you for keeping PS13-Bot instances safe!

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is a part of the DF13 project.
+ * This file is a part of the PS13 project.
  *
  * Copyright (c) 2022-present Valithor Obsidion <valithor@valzargaming.com>
  */
@@ -23,8 +23,8 @@ function webapiSnow($string) {
 $external_ip = file_get_contents('http://ipecho.net/plain');
 $valzargaming_ip = gethostbyname('www.valzargaming.com');
 
-$socket = new SocketServer(sprintf('%s:%s', '0.0.0.0', '55555'), $DF13->loop);
-$webapi = new HttpServer($loop, function (ServerRequestInterface $request) use ($DF13, $socket, $external_ip, $valzargaming_ip)
+$socket = new SocketServer(sprintf('%s:%s', '0.0.0.0', '55555'), $PS13->loop);
+$webapi = new HttpServer($loop, function (ServerRequestInterface $request) use ($PS13, $socket, $external_ip, $valzargaming_ip)
 {
     /*
     $path = explode('/', $request->getUri()->getPath());
@@ -45,9 +45,9 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
     $id3 = (isset($path[5]) ? (string) strtolower($path[5]) : false); if ($id3) $echo .= "/$id3";
     $id4 = (isset($path[6]) ? (string) strtolower($path[6]) : false); if ($id4) $echo .= "/$id4";
     $idarray = array(); //get from post data (NYI)
-    //$DF13->logger->info($echo);
+    //$PS13->logger->info($echo);
     
-    if ($ip) $DF13->logger->info('API IP ' . $ip);
+    if ($ip) $PS13->logger->info('API IP ' . $ip);
     $whitelist = [
         '127.0.0.1',
         $external_ip,
@@ -60,7 +60,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
     foreach ($substr_whitelist as $substr) if (substr($request->getServerParams()['REMOTE_ADDR'], 0, strlen($substr)) == $substr) $whitelisted = true;
     if (in_array($request->getServerParams()['REMOTE_ADDR'], $whitelist)) $whitelisted = true;
     
-    if (! $whitelisted) $DF13->logger->info('API REMOTE_ADDR ' . $request->getServerParams()['REMOTE_ADDR']);
+    if (! $whitelisted) $PS13->logger->info('API REMOTE_ADDR ' . $request->getServerParams()['REMOTE_ADDR']);
 
     switch ($sub) {
         case (str_starts_with($sub, 'index.')):
@@ -68,12 +68,12 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             return new Response(200, ['Content-Type' => 'text/html'], $return);
             break;
         case 'github':
-            $return = '<meta http-equiv = \"refresh\" content = \"0; url = https://github.com/VZGCoders/DF13-Bot\" />'; //Redirect to the website to log in
+            $return = '<meta http-equiv = \"refresh\" content = \"0; url = https://github.com/VZGCoders/PS13-Bot\" />'; //Redirect to the website to log in
             return new Response(200, ['Content-Type' => 'text/html'], $return);
             break;
         case 'favicon.ico':
             if (! $whitelisted) {
-                $DF13->logger->info('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->info('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
             $favicon = file_get_contents('favicon.ico');
@@ -81,7 +81,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
         
         case 'nohup.out':
             if (! $whitelisted) {
-                $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
             if ($return = file_get_contents('nohup.out')) return new Response(200, ['Content-Type' => 'text/plain'], $return);
@@ -90,7 +90,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
         
         case 'botlog':
             if (! $whitelisted) {
-                $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
             if ($return = file_get_contents('botlog.txt')) return new Response(200, ['Content-Type' => 'text/html'], '<meta name="color-scheme" content="light dark"> <div class="checkpoint">' . str_replace('[' . date("Y"), '</div><div> [' . date("Y"), str_replace([PHP_EOL, '[] []', ' [] '], '</div><div>', $return)) . "</div><script>var mainScrollArea=document.getElementsByClassName('checkpoint')[0];var scrollTimeout;window.onload=function(){if(window.location.href==localStorage.getItem('lastUrl')){mainScrollArea.scrollTop=localStorage.getItem('scrollTop');}else{localStorage.setItem('lastUrl',window.location.href);localStorage.setItem('scrollTop',0);}};mainScrollArea.addEventListener('scroll',function(){clearTimeout(scrollTimeout);scrollTimeout=setTimeout(function(){localStorage.setItem('scrollTop',mainScrollArea.scrollTop);},100);});setTimeout(locationreload,10000);function locationreload(){location.reload();}</script>");
@@ -99,7 +99,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             
         case 'botlog2':
             if (! $whitelisted) {
-                $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
             if ($return = file_get_contents('botlog2.txt')) return new Response(200, ['Content-Type' => 'text/html'], '<meta name="color-scheme" content="light dark"> <div class="checkpoint">' . str_replace('[' . date("Y"), '</div><div> [' . date("Y"), str_replace([PHP_EOL, '[] []', ' [] '], '</div><div>', $return)) . "</div><script>var mainScrollArea=document.getElementsByClassName('checkpoint')[0];var scrollTimeout;window.onload=function(){if(window.location.href==localStorage.getItem('lastUrl')){mainScrollArea.scrollTop=localStorage.getItem('scrollTop');}else{localStorage.setItem('lastUrl',window.location.href);localStorage.setItem('scrollTop',0);}};mainScrollArea.addEventListener('scroll',function(){clearTimeout(scrollTimeout);scrollTimeout=setTimeout(function(){localStorage.setItem('scrollTop',mainScrollArea.scrollTop);},100);});setTimeout(locationreload,10000);function locationreload(){location.reload();}</script>");
@@ -107,53 +107,53 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             break;
         
         case 'channel':
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->getChannel($id)) return webapiFail('channel_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->getChannel($id)) return webapiFail('channel_id', $id);
             break;
 
         case 'guild':
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->guilds->get('id', $id)) return webapiFail('guild_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->guilds->get('id', $id)) return webapiFail('guild_id', $id);
             break;
 
         case 'bans':
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->guilds->get('id', $id)->bans) return webapiFail('guild_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->guilds->get('id', $id)->bans) return webapiFail('guild_id', $id);
             break;
 
         case 'channels':
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->guilds->get('id', $id)->channels) return webapiFail('guild_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->guilds->get('id', $id)->channels) return webapiFail('guild_id', $id);
             break;
 
         case 'members':
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->guilds->get('id', $id)->members) return webapiFail('guild_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->guilds->get('id', $id)->members) return webapiFail('guild_id', $id);
             break;
 
         case 'emojis':
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->guilds->get('id', $id)->emojis) return webapiFail('guild_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->guilds->get('id', $id)->emojis) return webapiFail('guild_id', $id);
             break;
 
         case 'invites':
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->guilds->get('id', $id)->invites) return webapiFail('guild_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->guilds->get('id', $id)->invites) return webapiFail('guild_id', $id);
             break;
 
         case 'roles':
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->guilds->get('id', $id)->roles) return webapiFail('guild_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->guilds->get('id', $id)->roles) return webapiFail('guild_id', $id);
             break;
 
         case 'guildMember':
-            if (! $id || !webapiSnow($id) || !$guild = $DF13->discord->guilds->get('id', $id)) return webapiFail('guild_id', $id);
+            if (! $id || !webapiSnow($id) || !$guild = $PS13->discord->guilds->get('id', $id)) return webapiFail('guild_id', $id);
             if (! $id2 || !webapiSnow($id2) || !$return = $guild->members->get('id', $id2)) return webapiFail('user_id', $id2);
             break;
 
         case 'user':
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->users->get('id', $id)) return webapiFail('user_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->users->get('id', $id)) return webapiFail('user_id', $id);
             break;
 
         case 'userName':
-            if (! $id || !$return = $DF13->discord->users->get('name', $id)) return webapiFail('user_name', $id);
+            if (! $id || !$return = $PS13->discord->users->get('name', $id)) return webapiFail('user_name', $id);
             break;
         
         case 'reset':
             if (! $whitelisted) {
-                $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
             execInBackground('git reset --hard origin/main');
@@ -162,58 +162,58 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
         
         case 'pull':
             if (! $whitelisted) {
-                $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
             execInBackground('git pull');
-            $DF13->logger->info('[GIT PULL]');
-            if ($channel = $DF13->discord->getChannel('712685552155230278')) $channel->sendMessage('Updating code from GitHub...');
+            $PS13->logger->info('[GIT PULL]');
+            if ($channel = $PS13->discord->getChannel('712685552155230278')) $channel->sendMessage('Updating code from GitHub...');
             $return = 'updating code';
             break;
         
         case 'update':
             if (! $whitelisted) {
-                $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
             execInBackground('composer update');
-            $DF13->logger->info('[COMPOSER UPDATE]');
-            if ($channel = $DF13->discord->getChannel('712685552155230278')) $channel->sendMessage('Updating dependencies...');
+            $PS13->logger->info('[COMPOSER UPDATE]');
+            if ($channel = $PS13->discord->getChannel('712685552155230278')) $channel->sendMessage('Updating dependencies...');
             $return = 'updating dependencies';
             break;
         
         case 'restart':
             if (! $whitelisted) {
-                $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
-            $DF13->logger->info('[RESTART]');
-            if ($channel = $DF13->discord->getChannel('712685552155230278')) $channel->sendMessage('Restarting...');
+            $PS13->logger->info('[RESTART]');
+            if ($channel = $PS13->discord->getChannel('712685552155230278')) $channel->sendMessage('Restarting...');
             $return = 'restarting';
             $socket->close();
-            $DF13->discord->getLoop()->addTimer(5, function () use ($DF13) {
+            $PS13->discord->getLoop()->addTimer(5, function () use ($PS13) {
                 \restart();
-                $DF13->discord->close();
+                $PS13->discord->close();
                 die();
             });
             break;
 
         case 'lookup':
             if (! $whitelisted) {
-                $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
-            if (! $id || !webapiSnow($id) || !$return = $DF13->discord->users->get('id', $id)) return webapiFail('user_id', $id);
+            if (! $id || !webapiSnow($id) || !$return = $PS13->discord->users->get('id', $id)) return webapiFail('user_id', $id);
             break;
 
         case 'owner':
             if (! $whitelisted) {
-                $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                 return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
             }
             if (! $id || !webapiSnow($id)) return webapiFail('user_id', $id); $return = false;
-            if ($user = $DF13->discord->users->get('id', $id)) { //Search all guilds the bot is in and check if the user id exists as a guild owner
-                foreach ($DF13->discord->guilds as $guild) {
+            if ($user = $PS13->discord->users->get('id', $id)) { //Search all guilds the bot is in and check if the user id exists as a guild owner
+                foreach ($PS13->discord->guilds as $guild) {
                     if ($id == $guild->owner_id) {
                         $return = true;
                         break 1;
@@ -224,7 +224,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
 
         case 'avatar':
             if (! $id || !webapiSnow($id)) return webapiFail('user_id', $id);
-            if (! $user = $DF13->discord->users->get('id', $id)) $return = 'https://cdn.discordapp.com/embed/avatars/'.rand(0,4).'.png';
+            if (! $user = $PS13->discord->users->get('id', $id)) $return = 'https://cdn.discordapp.com/embed/avatars/'.rand(0,4).'.png';
             else $return = $user->avatar;
             //if (! $return) return new Response(($id ? 404 : 400), ['Content-Type' => 'text/plain'], (''));
             break;
@@ -233,14 +233,14 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             /*
             $idarray = $data ?? array(); // $data contains POST data
             $results = [];
-            $promise = $DF13->discord->users->fetch($idarray[0])->then(function ($user) use (&$results) {
+            $promise = $PS13->discord->users->fetch($idarray[0])->then(function ($user) use (&$results) {
               $results[$user->id] = $user->avatar;
             });
             
             for ($i = 1; $i < count($idarray); $i++) {
-                $discord = $DF13->discord;
+                $discord = $PS13->discord;
                 $promise->then(function () use (&$results, $idarray, $i, $discord) {
-                return $DF13->discord->users->fetch($idarray[$i])->then(function ($user) use (&$results) {
+                return $PS13->discord->users->fetch($idarray[$i])->then(function ($user) use (&$results) {
                     $results[$user->id] = $user->avatar;
                 });
               });
@@ -256,14 +256,14 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             $return = '';
             break;
         
-        case 'df13':
+        case 'ps13':
             switch ($id) {
                 case 'bans':
                     if (! $whitelisted) {
-                        $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                        $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                         return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
                     }
-                    $bans = $DF13->files['bans'];
+                    $bans = $PS13->files['bans'];
                     if ($return = file_get_contents($bans)) return new Response(200, ['Content-Type' => 'text/plain'], $return);
                     else return new Response(501, ['Content-Type' => 'text/plain'], "Unable to access `$bans`");
                     break;
@@ -275,10 +275,10 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             switch ($id) {
                 case 'bans':
                     if (! $whitelisted) {
-                        $DF13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
+                        $PS13->logger->alert('API REJECT ' . $request->getServerParams()['REMOTE_ADDR']);
                         return new Response(501, ['Content-Type' => 'text/plain'], 'Reject');
                     }
-                    $tdm_bans = $DF13->files['tdm_bans'];
+                    $tdm_bans = $PS13->files['tdm_bans'];
                     if ($return = file_get_contents($tdm_bans)) return new Response(200, ['Content-Type' => 'text/plain'], $return);
                     else return new Response(501, ['Content-Type' => 'text/plain'], "Unable to access `$tdm_bans`");
                     break;
@@ -289,13 +289,13 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
         
         case 'discord2ckey':
             if (! $id || !webapiSnow($id) || !is_numeric($id)) return webapiFail('user_id', $id);
-            $discord2ckey = $DF13->functions['misc']['discord2ckey'];
-            $return = $discord2ckey($DF13, $id);
+            $discord2ckey = $PS13->functions['misc']['discord2ckey'];
+            $return = $discord2ckey($PS13, $id);
             return new Response(200, ['Content-Type' => 'text/plain'], $return);
             break;
             
         case 'verified':
-            return new Response(200, ['Content-Type' => 'text/plain'], json_encode($DF13->verified->toArray()));
+            return new Response(200, ['Content-Type' => 'text/plain'], json_encode($PS13->verified->toArray()));
             break;
             
         default:
@@ -304,6 +304,6 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
     return new Response(200, ['Content-Type' => 'text/json'], json_encode($return));
 });
 $webapi->listen($socket);
-$webapi->on('error', function ($e) use ($DF13) {
-    $DF13->logger->error('API ' . $e->getMessage());
+$webapi->on('error', function ($e) use ($PS13) {
+    $PS13->logger->error('API ' . $e->getMessage());
 });
