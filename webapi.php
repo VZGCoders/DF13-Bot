@@ -79,32 +79,32 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
         switch ($params['method']) {
             case 'ahelpmessage':
                 $channel_id = $PS13->channel_ids['ahelp_channel'];
-                $message .= "**__{$time} AHELP__ {$data['ckey']}**: {$data['message']}";
+                $message .= "**__{$time} AHELP__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'asaymessage':
                 $channel_id = $PS13->channel_ids['asay_channel'];
-                $message .= "**__{$time} ASAY__ {$data['ckey']}**: {$data['message']}";
+                $message .= "**__{$time} ASAY__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'oocmessage':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
-                $message .= "**__{$time} OOC__ {$data['ckey']}**: {$data['message']}";
+                $message .= "**__{$time} OOC__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'lobbymessage':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
-                $message .= "**__{$time} LOBBY__ {$data['ckey']}**: {$data['message']}";
+                $message .= "**__{$time} LOBBY__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'memessage':
                 $channel_id = $PS13->channel_ids['ic_channel'];
-                $message .= "**__{$time} EMOTE__ {$data['ckey']}** {$data['message']}";
+                $message .= "**__{$time} EMOTE__ {$data['ckey']}**" . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'garbage':
                 $channel_id = $PS13->channel_ids['garbage_channel'];
-                $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags($data['message']);
+                $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags(urldecode($data['message']));
                 $ckey = $data['ckey'];
                 break;
             case 'token':
@@ -113,7 +113,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             case 'respawn_notice':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
                 if (isset($PS13->role_ids['respawn_notice'])) $message .= "<@&{$PS13->role_ids['respawn_notice']}>, ";
-                $message .= $data['message'];
+                $message .= urldecode($data['message']);
                 break;
             case 'login':
                 $channel_id = $PS13->channel_ids['login-logout_channel'];
