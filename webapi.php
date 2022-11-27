@@ -99,12 +99,12 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 break;
             case 'memessage':
                 $channel_id = $PS13->channel_ids['ic_channel'];
-                $message .= "**__{$time} EMOTE__ {$data['ckey']}**" . urldecode($data['message']);
+                $message .= "**__{$time} EMOTE__ {$data['ckey']}** " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'garbage':
                 $channel_id = $PS13->channel_ids['garbage_channel'];
-                $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags(urldecode($data['message']));
+                $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'token':
