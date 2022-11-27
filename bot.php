@@ -137,8 +137,6 @@ $options = array(
             'join_roles' => $join_roles,
         ],
         'misc' => [ //Custom functions
-            'ooc_relay' => $ooc_relay,
-            'timer_function' => $timer_function,
             'status_changer' => $status_changer,
             'ban' => $ban,
             'browser_call' => $browser_call,

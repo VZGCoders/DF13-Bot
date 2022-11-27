@@ -855,7 +855,7 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
     */
 };
 
-$on_ready = function (PS13 $PS13) use ($timer_function): void
+$on_ready = function (PS13 $PS13): void
 {//on ready
     $PS13->logger->info("logged in as {$PS13->discord->user->displayname} ({$PS13->discord->id})");
     $PS13->logger->info('------');
