@@ -855,50 +855,15 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
     */
 };
 
-$ooc_relay = function (PS13 $PS13, string $file_path, $channel) use ($ban): bool
-{     
-    if (! $file = fopen($file_path, 'r+')) return false;
-    while (($fp = fgets($file, 4096)) !== false) {
-        $fp = str_replace(PHP_EOL, '', $fp);
-        //ban ckey if $fp contains a blacklisted word
-        $string = substr($fp, strpos($fp, '/')+1);
-        $badwords = ['beaner', 'chink', 'chink', 'coon', 'fag', 'faggot', 'gook', 'kike', 'nigga', 'nigger', 'tranny'];
-        $ckey = substr($string, 0, strpos($string, ':'));
-        foreach ($badwords as $badword) {
-            if (str_contains(strtolower($string), $badword)) {
-                $filtered = substr($badword, 0, 1);
-                for ($x=1;$x<strlen($badword)-2; $x++) $filtered .= '%';
-                $filtered  .= substr($badword, -1, 1);
-                $ban($PS13, [$ckey, '999 years', "Blacklisted word ($filtered), please appeal on our discord"]);
-            }
-        }
-        if (! $item = $PS13->verified->get('ss13', strtolower(str_replace(['.', '_', ' '], '', $ckey)))) $channel->sendMessage($fp);
-        else {
-            $user = $PS13->discord->users->get('id', $item['discord']);
-            $embed = new Embed($PS13->discord);
-            $embed->setAuthor("{$user->displayname} ({$user->id})", $user->avatar);
-            $embed->setDescription($fp);
-            $channel->sendEmbed($embed);
-        }
-    }
-    ftruncate($file, 0); //clear the file
-    fclose($file);
-    return true;
-};
-$timer_function = function (PS13 $PS13) use ($ooc_relay): void
-{
-        if ($guild = $PS13->discord->guilds->get('id', $PS13->PS13_guild_id)) { 
-        if ($channel = $guild->channels->get('id', $PS13->channel_ids['ooc_channel']))$ooc_relay($PS13, $PS13->files['ooc_path'], $channel);  // #ooc
-        if ($channel = $guild->channels->get('id', $PS13->channel_ids['ahelp_channel'])) $ooc_relay($PS13, $PS13->files['admin_path'], $channel);  // #ahelp        
-    }
-};
 $on_ready = function (PS13 $PS13) use ($timer_function): void
 {//on ready
     $PS13->logger->info("logged in as {$PS13->discord->user->displayname} ({$PS13->discord->id})");
     $PS13->logger->info('------');
     
+    /* Deprecated
     if (! (isset($PS13->timers['relay_timer'])) || (! $PS13->timers['relay_timer'] instanceof Timer) ) {
         $PS13->logger->info('chat relay timer started');
         //$PS13->timers['relay_timer'] = $PS13->discord->getLoop()->addPeriodicTimer(10, function() use ($timer_function, $PS13) { $timer_function($PS13); }); //PS13 currently uses webhooks
     }
+    */
 };

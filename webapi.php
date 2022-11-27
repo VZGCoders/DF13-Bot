@@ -6,6 +6,7 @@
  * Copyright (c) 2022-present Valithor Obsidion <valithor@valzargaming.com>
  */
 
+use PS13\PS13;
 use React\Socket\Server as SocketServer;
 use React\Http\Server as HttpServer;
 use React\Http\Message\Response;
@@ -21,12 +22,27 @@ function webapiSnow($string) {
     return preg_match('/^[0-9]{16,20}$/', $string);
 }
 
+$moderator = function (string &$message): false|string
+{ //Function needs to be updated to read messages sent in #ic-emotes, #ooc, and #ahelp
+    $cleaned = null;
+    $badwords = ['beaner', 'chink', 'chink', 'coon', 'fag', 'gook', 'kike', 'nigg', 'nlgg', 'tranny']; //Move this to a .gitignore'd file?
+    foreach ($badwords as $badword) {
+        if (str_contains(strtolower($message), $badword)) {
+            $filtered = substr($badword, 0, 1);
+            for ($x=1;$x<strlen($badword)-2; $x++) $filtered .= '%';
+            $filtered .= substr($badword, -1, 1);
+            $cleaned = $message = str_replace($badword, $filtered, $message); //"Blacklisted word ($filtered), please appeal on our discord"
+        }
+    }
+    return $cleaned ?? false;
+};
+
 $external_ip = file_get_contents('http://ipecho.net/plain');
 $valzargaming_ip = gethostbyname('www.valzargaming.com');
 $ps13_webhook_key = file_get_contents('webhook_key.txt');
 
 $socket = new SocketServer(sprintf('%s:%s', '0.0.0.0', '55558'), $PS13->loop);
-$webapi = new HttpServer($loop, function (ServerRequestInterface $request) use ($PS13, $socket, $external_ip, $valzargaming_ip, $ps13_webhook_key)
+$webapi = new HttpServer($loop, function (ServerRequestInterface $request) use ($PS13, $moderator, $socket, $external_ip, $valzargaming_ip, $ps13_webhook_key)
 {
     /*
     $path = explode('/', $request->getUri()->getPath());
@@ -76,29 +92,50 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
         $channel_id = '';
         $message = '';
         $ckey = '';
+        $moderator_triggered = false;
         switch ($params['method']) {
             case 'ahelpmessage':
                 $channel_id = $PS13->channel_ids['ahelp_channel'];
+                if ($moderated = $moderator($data['$message'])) {
+                    $moderator_triggered = true;
+                    $data['$message'] = $moderated;
+                }
                 $message .= "**__{$time} AHELP__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'asaymessage':
                 $channel_id = $PS13->channel_ids['asay_channel'];
+                if ($moderated = $moderator($data['$message'])) {
+                    $moderator_triggered = true;
+                    $data['$message'] = $moderated;
+                }
                 $message .= "**__{$time} ASAY__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'oocmessage':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
+                if ($moderated = $moderator($data['$message'])) {
+                    $moderator_triggered = true;
+                    $data['$message'] = $moderated;
+                }
                 $message .= "**__{$time} OOC__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'lobbymessage':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
+                if ($moderated = $moderator($data['$message'])) {
+                    $moderator_triggered = true;
+                    $data['$message'] = $moderated;
+                }
                 $message .= "**__{$time} LOBBY__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'memessage':
                 $channel_id = $PS13->channel_ids['ic_channel'];
+                if ($moderated = $moderator($data['$message'])) {
+                    $moderator_triggered = true;
+                    $data['$message'] = $moderated;
+                }
                 $message .= "**__{$time} EMOTE__ {$data['ckey']}** " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
@@ -137,6 +174,9 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 break;
             default:
                 return new Response(400, ['Content-Type' => 'text/plain'], 'Invalid Parameter');
+        }
+        if ($moderator_triggered && $ahelp = $PS13->discord->getChannel($PS13->channel_ids['ahelp_channel'])) { //alert admins, maybe add an in-game ban in a future update?
+            $ahelp->sendMessage("<@&{$PS13->role_ids['longbeard']}>, `{$data['ckey']}` triggered the in-game message moderator: `$message`");
         }
         if ($channel_id && $message && $channel = $PS13->discord->getChannel($channel_id)) {
             if (! $ckey || ! $item = $PS13->verified->get('ss13', strtolower(str_replace(['.', '_', ' '], '', explode('/', $ckey)[0])))) $channel->sendMessage($message);
