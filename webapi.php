@@ -86,7 +86,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
         $params = $request->getQueryParams();
         var_dump($params);
         if (!isset($params['key']) || $params['key'] != $ps13_webhook_key) return new Response(401, ['Content-Type' => 'text/plain'], 'Unauthorized');
-        if (!isset($params['method']) || !isset($params['data'])) return new Response(400, ['Content-Type' => 'text/plain'], 'Missing Paramters');
+        if (!isset($params['method']) || !isset($params['data'])) return new Response(400, ['Content-Type' => 'text/plain'], 'Missing Parameters');
         $data = json_decode($params['data'], true);
         $time = '['.date('H:i:s', time()).']';
         $channel_id = '';
