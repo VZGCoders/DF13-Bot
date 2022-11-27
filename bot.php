@@ -104,7 +104,8 @@ $options = array(
         'asay_channel' => '1046272438612283452', //#asay
         'ic_channel' => '1046273289540096070', //#ic-emotes
         'garbage_channel' => '1046273316756918402', //#garbage
-        'error_channel' => '1046308005685248050', #error
+        'runtime_channel' => '1046308005685248050', #runtime
+        'login-logout_channel' => '1046353236891803708', #login-logout_channel
     ),
     'role_ids' => array(
         'thane' => '1043390003381817362', //Host

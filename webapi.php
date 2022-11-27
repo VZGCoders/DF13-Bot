@@ -115,6 +115,16 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 if (isset($PS13->role_ids['respawn_notice'])) $message .= "<@&{$PS13->role_ids['respawn_notice']}>, ";
                 $message .= $data['message'];
                 break;
+            case 'login':
+                $channel_id = $PS13->channel_ids['login-logout_channel'];
+                $message .= "{$data['ckey']} logged in.";
+                $ckey = explode(' ', $data['ckey'])[0];
+                break;
+            case 'logout':
+                $channel_id = $PS13->channel_ids['login-logout_channel'];
+                $message .= "{$data['ckey']} logged out.";
+                $ckey = strtolower(explode('[DC]', $data['ckey'])[0]);
+                break;
             case 'roundstatus':
                 echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
                 break;
@@ -122,8 +132,8 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
                 break;
             case 'runtimemessage':
-                $channel_id = $PS13->channel_ids['error_channel'];
-                $message .= "**__{$time} ERROR__**: " . strip_tags($data['message']);
+                $channel_id = $PS13->channel_ids['runtime_channel'];
+                $message .= "**__{$time} RUNTIME__**: " . strip_tags($data['message']);
                 break;
             default:
                 return new Response(400, ['Content-Type' => 'text/plain'], 'Invalid Parameter');
