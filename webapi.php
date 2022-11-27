@@ -123,7 +123,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             case 'logout':
                 $channel_id = $PS13->channel_ids['login-logout_channel'];
                 $message .= "{$data['ckey']} logged out.";
-                $ckey = strtolower(explode('[DC]', $data['ckey'])[0]);
+                $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
                 break;
             case 'roundstatus':
                 echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
