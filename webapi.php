@@ -140,7 +140,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 $ckey = $data['ckey'];
                 break;
             case 'garbage':
-                $channel_id = $PS13->channel_ids['garbage_channel'];
+                $channel_id = $PS13->channel_ids['admin-log_channel'];
                 $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags($data['message']);
                 $ckey = $data['ckey'];
                 break;
