@@ -9,7 +9,8 @@
 use React\Socket\Server as SocketServer;
 use React\Http\Server as HttpServer;
 use React\Http\Message\Response;
-use \Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Discord\Parts\Embed\Embed;
 
 function webapiFail($part, $id) {
     //logInfo('[webapi] Failed', ['part' => $part, 'id' => $id]);
@@ -22,9 +23,10 @@ function webapiSnow($string) {
 
 $external_ip = file_get_contents('http://ipecho.net/plain');
 $valzargaming_ip = gethostbyname('www.valzargaming.com');
+$ps13_webhook_key = file_get_contents('webhook_key.txt');
 
-$socket = new SocketServer(sprintf('%s:%s', '0.0.0.0', '55555'), $PS13->loop);
-$webapi = new HttpServer($loop, function (ServerRequestInterface $request) use ($PS13, $socket, $external_ip, $valzargaming_ip)
+$socket = new SocketServer(sprintf('%s:%s', '0.0.0.0', '55558'), $PS13->loop);
+$webapi = new HttpServer($loop, function (ServerRequestInterface $request) use ($PS13, $socket, $external_ip, $valzargaming_ip, $ps13_webhook_key)
 {
     /*
     $path = explode('/', $request->getUri()->getPath());
@@ -44,8 +46,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
     $ip = $partial = $method2 = (isset($path[4]) ? (string) strtolower($path[4]) : false); if ($partial) $echo .= "/$partial";
     $id3 = (isset($path[5]) ? (string) strtolower($path[5]) : false); if ($id3) $echo .= "/$id3";
     $id4 = (isset($path[6]) ? (string) strtolower($path[6]) : false); if ($id4) $echo .= "/$id4";
-    $idarray = array(); //get from post data (NYI)
-    //$PS13->logger->info($echo);
+    $PS13->logger->info($echo);
     
     if ($ip) $PS13->logger->info('API IP ' . $ip);
     $whitelist = [
@@ -61,6 +62,88 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
     if (in_array($request->getServerParams()['REMOTE_ADDR'], $whitelist)) $whitelisted = true;
     
     if (! $whitelisted) $PS13->logger->info('API REMOTE_ADDR ' . $request->getServerParams()['REMOTE_ADDR']);
+    
+    $PS13->logger->info('[API METHOD] ' . $request->getMethod() . PHP_EOL);
+    $PS13->logger->info('[PATH] ' . $request->getUri()->getPath() . PHP_EOL);
+    
+    if ($sub == 'ps13') {
+        $params = $request->getQueryParams();
+        var_dump($params);
+        if (!isset($params['key']) || $params['key'] != $ps13_webhook_key) return new Response(401, ['Content-Type' => 'text/plain'], 'Unauthorized');
+        if (!isset($params['method']) || !isset($params['data'])) return new Response(400, ['Content-Type' => 'text/plain'], 'Missing Paramters');
+        $data = json_decode($params['data'], true);
+        $time = '['.date('H:i:s', time()).']';
+        $channel_id = '';
+        $message = '';
+        $ckey = '';
+        switch ($params['method']) {
+            case 'ahelpmessage':
+                $channel_id = $PS13->channel_ids['ahelp_channel'];
+                $message .= "**__{$time} AHELP__ {$data['ckey']}**: {$data['message']}";
+                $ckey = $data['ckey'];
+                break;
+            case 'asaymessage':
+                $channel_id = $PS13->channel_ids['asay_channel'];
+                $message .= "**__{$time} ASAY__ {$data['ckey']}**: {$data['message']}";
+                $ckey = $data['ckey'];
+                break;
+            case 'oocmessage':
+                $channel_id = $PS13->channel_ids['ooc_channel'];
+                $message .= "**__{$time} OOC__ {$data['ckey']}**: {$data['message']}";
+                $ckey = $data['ckey'];
+                break;
+            case 'lobbymessage':
+                $channel_id = $PS13->channel_ids['ooc_channel'];
+                $message .= "**__{$time} LOBBY__ {$data['ckey']}**: {$data['message']}";
+                $ckey = $data['ckey'];
+                break;
+            case 'memessage':
+                $channel_id = $PS13->channel_ids['emotes'];
+                $message .= "**__{$time} EMOTE__ {$data['ckey']}** {$data['message']}";
+                $ckey = $data['ckey'];
+                break;
+            case 'garbage':
+                $channel_id = $PS13->channel_ids['garbage'];
+                $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags($data['message']);
+                $ckey = $data['ckey'];
+                break;
+            case 'token':
+                echo "[DATA FOR {$params ['method']}]: "; var_dump($params ['data']); echo PHP_EOL;
+                break;
+            case 'respawn_notice':
+                $channel_id = $PS13->channel_ids['ooc_channel'];
+                if (isset($PS13->role_ids['respawn_notice'])) $message .= "<@&{$PS13->role_ids['respawn_notice']}>, ";
+                $message .= $data['message'];
+                break;
+            case 'roundstatus':
+                echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
+                break;
+            case 'status_update':
+                echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
+                break;
+            case 'runtimemessage':
+                $channel_id = $PS13->channel_ids['error'];
+                $message .= "**__{$time} ERROR__**: " . strip_tags($data['message']);
+                break;
+            default:
+                return new Response(400, ['Content-Type' => 'text/plain'], 'Invalid Parameter');
+        }
+        if ($channel_id && $message && $channel = $PS13->discord->getChannel($channel_id)) {
+            if (! $ckey || ! $item = $PS13->verified->get('ss13', strtolower(str_replace(['.', '_', ' '], '', explode('/', $ckey)[0])))) $channel->sendMessage($message);
+            elseif ($user = $PS13->discord->users->get('id', $item['discord'])) {
+                $embed = new Embed($PS13->discord);
+                $embed->setAuthor("{$user->displayname} ({$user->id})", $user->avatar);
+                $embed->setDescription($message);
+                $channel->sendEmbed($embed);
+            } elseif($item) {
+                $PS13->discord->users->fetch('id', $item['discord']);
+                $channel->sendMessage($message);
+            } else {
+                $channel->sendMessage($message);
+            }
+        }
+        return new Response(200, ['Content-Type' => 'text/html'], 'Done');
+    }
 
     switch ($sub) {
         case (str_starts_with($sub, 'index.')):

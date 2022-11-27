@@ -99,8 +99,12 @@ $options = array(
         'playerlogs' => 'C:/GitHub/Dwarf-Fortress-13/SQL/playerlogs.txt',
     ),
     'channel_ids' => array(
-        'ooc_channel' => '', //#ooc
-        'admin_channel' => '', //#ahelp
+        'ooc_channel' => '1046226008010936360', //#ooc
+        'ahelp_channel' => '1046226107638231120', //#ahelp
+        'asay_channel' => '1046272438612283452', //#asay
+        'emotes' => '1046273289540096070', //#emotes
+        'garbage' => '1046273316756918402', //#garbage
+        'error' => '1046308005685248050', #error
     ),
     'role_ids' => array(
         'thane' => '1043390003381817362', //Host
@@ -110,6 +114,8 @@ $options = array(
         'unbearded' => '1043390003327291394', //Verified
         'banished' => '1043390003327291397', //Banned in-game (unused)
         'paroled' => '1043390003360837729', //On parole (unused)
+        
+        'respawn_notice' => '1046241083685884066',
     ),
     'functions' => array(
         'ready' => [

@@ -660,13 +660,16 @@ $serverinfo_parse = function ($PS13): array
         if (isset($server_info_hard['name'])) $return[$index]['Server'] = [false => $server_info_hard['name'] . PHP_EOL . $server_info_hard['link']];
         if (isset($server_info_hard['host'])) $return[$index]['Host'] = [true => $server_info_hard['host']];
         //Round time
-        if (isset($server['roundduration'])) {
+        if (isset($server['roundduration']) /*|| isset($server['round_duration'])*/) { //TODO
             $rd = explode(":", urldecode($server['roundduration']));
             $remainder = ($rd[0] % 24);
             $rd[0] = floor($rd[0] / 24);
             if ($rd[0] != 0 || $remainder != 0 || $rd[1] != 0) $rt = "{$rd[0]}d {$remainder}h {$rd[1]}m";
             else $rt = 'STARTING';
             $return[$index]['Round Timer'] = [true => $rt];
+        }
+        if (isset($server['round_duration'])) {
+            //TODO
         }
         if (isset($server['map'])) $return[$index]['Map'] = [true => urldecode($server['map'])];
         if (isset($server['age'])) $return[$index]['Epoch'] = [true => urldecode($server['age'])];
@@ -886,7 +889,7 @@ $timer_function = function (PS13 $PS13) use ($ooc_relay): void
 {
         if ($guild = $PS13->discord->guilds->get('id', $PS13->PS13_guild_id)) { 
         if ($channel = $guild->channels->get('id', $PS13->channel_ids['ooc_channel']))$ooc_relay($PS13, $PS13->files['ooc_path'], $channel);  // #ooc
-        if ($channel = $guild->channels->get('id', $PS13->channel_ids['admin_channel'])) $ooc_relay($PS13, $PS13->files['admin_path'], $channel);  // #ahelp        
+        if ($channel = $guild->channels->get('id', $PS13->channel_ids['ahelp_channel'])) $ooc_relay($PS13, $PS13->files['admin_path'], $channel);  // #ahelp        
     }
 };
 $on_ready = function (PS13 $PS13) use ($timer_function): void
@@ -896,6 +899,6 @@ $on_ready = function (PS13 $PS13) use ($timer_function): void
     
     if (! (isset($PS13->timers['relay_timer'])) || (! $PS13->timers['relay_timer'] instanceof Timer) ) {
         $PS13->logger->info('chat relay timer started');
-        $PS13->timers['relay_timer'] = $PS13->discord->getLoop()->addPeriodicTimer(10, function() use ($timer_function, $PS13) { $timer_function($PS13); });
+        //$PS13->timers['relay_timer'] = $PS13->discord->getLoop()->addPeriodicTimer(10, function() use ($timer_function, $PS13) { $timer_function($PS13); }); //PS13 currently uses webhooks
     }
 };
