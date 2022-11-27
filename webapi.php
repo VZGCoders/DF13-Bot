@@ -98,17 +98,17 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 $ckey = $data['ckey'];
                 break;
             case 'memessage':
-                $channel_id = $PS13->channel_ids['emotes'];
+                $channel_id = $PS13->channel_ids['ic_channel'];
                 $message .= "**__{$time} EMOTE__ {$data['ckey']}** {$data['message']}";
                 $ckey = $data['ckey'];
                 break;
             case 'garbage':
-                $channel_id = $PS13->channel_ids['garbage'];
+                $channel_id = $PS13->channel_ids['garbage_channel'];
                 $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'token':
-                echo "[DATA FOR {$params ['method']}]: "; var_dump($params ['data']); echo PHP_EOL;
+                echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
                 break;
             case 'respawn_notice':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
@@ -122,7 +122,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
                 break;
             case 'runtimemessage':
-                $channel_id = $PS13->channel_ids['error'];
+                $channel_id = $PS13->channel_ids['error_channel'];
                 $message .= "**__{$time} ERROR__**: " . strip_tags($data['message']);
                 break;
             default:

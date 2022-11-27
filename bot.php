@@ -102,9 +102,9 @@ $options = array(
         'ooc_channel' => '1046226008010936360', //#ooc
         'ahelp_channel' => '1046226107638231120', //#ahelp
         'asay_channel' => '1046272438612283452', //#asay
-        'emotes' => '1046273289540096070', //#emotes
-        'garbage' => '1046273316756918402', //#garbage
-        'error' => '1046308005685248050', #error
+        'ic_channel' => '1046273289540096070', //#ic-emotes
+        'garbage_channel' => '1046273316756918402', //#garbage
+        'error_channel' => '1046308005685248050', #error
     ),
     'role_ids' => array(
         'thane' => '1043390003381817362', //Host
