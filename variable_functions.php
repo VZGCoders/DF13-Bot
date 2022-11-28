@@ -612,6 +612,8 @@ $on_message = function (PS13 $PS13, $message) use ($guild_message, $discord2ooc,
 
 $bancheck = function (PS13 $PS13, string $ckey): bool
 {
+    return false;
+    /* Deprecated, bans are now stored in SQL
     $return = false;
     if ($filecheck1 = fopen($PS13->files['bans'], 'r')) {
         while (($fp = fgets($filecheck1, 4096)) !== false) {
@@ -622,6 +624,7 @@ $bancheck = function (PS13 $PS13, string $ckey): bool
         fclose($filecheck1);
     } else $PS13->logger->warning("unable to open `{$PS13->files['bans']}`");
     return $return;
+    */
 };
 $join_roles = function (PS13 $PS13, $member) use ($bancheck)
 {
