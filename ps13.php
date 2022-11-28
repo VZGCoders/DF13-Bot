@@ -34,6 +34,8 @@ class PS13
     public collection $verified; //This probably needs a default value for Collection, maybe make it a Repository instead?
     public collection $pending;
     public $ages = []; //$ckey => $age, temporary cache to avoid spamming the Byond REST API, but we don't want to save it to a file because we also use it to check if the account still exists
+    public $bans = [];
+    public $bancheck_temp = [];
     
     public $timers = [];
     public $serverinfo = [];

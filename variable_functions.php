@@ -409,6 +409,27 @@ $guild_message = function (PS13 $PS13, $message, string $message_content, string
     
 };
 
+$bancheck = function (PS13 $PS13, string $ckey): bool
+{
+    if (! $data_json = json_decode(file_get_contents("http://ps13.valzargaming.com/sql/?method=bans"),  true) ?? $PS13->bans) return false;
+    $PS13->bans = $data_json;
+    $return = false;
+    $PS13->bancheck_temp = [];
+    foreach ($PS13->bans = $data_json as $ban) if ($ban['ckey'] == $ckey) {
+        $return = true;
+        $PS13->bancheck_temp[] = $ban;
+    }
+    return $return;
+};
+$join_roles = function (PS13 $PS13, $member) use ($bancheck)
+{
+    if ($member->guild_id != $PS13->PS13_guild_id) return;
+    if ($item = $PS13->verified->get('discord', $member->id)) {
+        if (! $bancheck($PS13, $item['ss13'])) return $member->setroles([$PS13->role_ids['unbearded']], "verified join {$item['ss13']}");
+        return $member->setroles([$PS13->role_ids['unbearded'], $PS13->role_ids['banished']], "bancheck join {$item['ss13']}");
+    }
+};
+
 $discord2ooc = function (PS13 $PS13, $author, $string): bool
 {
     if (! $file = fopen($PS13->files['discord2ooc'], 'a')) return false;
@@ -430,7 +451,7 @@ $discord2dm = function (PS13 $PS13, $author, $string): bool
     fclose($file);
     return true;
 };
-$on_message = function (PS13 $PS13, $message) use ($guild_message, $discord2ooc, $discord2admin, $discord2dm)
+$on_message = function (PS13 $PS13, $message) use ($guild_message, $bancheck, $discord2ooc, $discord2admin, $discord2dm)
 { // on message
     if ($message->guild->owner_id != $PS13->owner_id) return; //Only process commands from a guild that Taislin owns
     if (! $PS13->command_symbol) $PS13->command_symbol = '!s';
@@ -528,37 +549,10 @@ $on_message = function (PS13 $PS13, $message) use ($guild_message, $discord2ooc,
     }
     if (str_starts_with($message_content_lower, 'bancheck')) {
         if (! $ckey = trim(str_replace(['.', '_', ' '], '', substr($message_content_lower, strlen('bancheck'))))) return $message->reply('Wrong format. Please try `bancheck [ckey]`.');
-        $reason = "unknown";
-        $found = false;
-        if ($filecheck1 = fopen($PS13->files['bans'], 'r')) {
-            while (($fp = fgets($filecheck1, 4096)) !== false) {
-                $linesplit = explode(';', trim(str_replace('|||', '', $fp))); //$split_ckey[0] is the ckey
-                if ((count($linesplit)>=8) && ($linesplit[8] == strtolower($ckey))) {
-                    $found = true;
-                    $type = $linesplit[0];
-                    $reason = $linesplit[3];
-                    $admin = $linesplit[4];
-                    $date = $linesplit[5];
-                    $message->reply("**$ckey** has been **$type** banned from **PS13** on **$date** for **$reason** by $admin.");
-                }
-            }
-            fclose($filecheck1);
-        }
-        if ($filecheck2 = fopen($PS13->files['bans'], 'r')) {
-            while (($fp = fgets($filecheck2, 4096)) !== false) {
-                $linesplit = explode(';', trim(str_replace('|||', '', $fp))); //$split_ckey[0] is the ckey
-                if ((count($linesplit)>=8) && ($linesplit[8] == strtolower($ckey))) {
-                    $found = true;
-                    $reason = $linesplit[3];
-                    $admin = $linesplit[4];
-                    $date = $linesplit[5];
-                    $message->reply("**$ckey** has been banned from **TDM** on **$date** for **$reason** by $admin.");
-                }
-            }
-            fclose($filecheck2);
-        }
-        if (! $found) return $message->reply("No bans were found for **$ckey**.");
-        return;
+        if (! $bancheck($PS13, $ckey)) return $message->reply("No bans were found for **$ckey**.");
+        $return[] = "`$ckey` has been banned:";
+        foreach ($PS13->bancheck_temp as $ban) $return[] = "from **{$ban['role']}** by `{$ban['a_ckey']}` for **{$ban['reason']}** and expires **" . ($ban['expiration_time'] ? date("D M j G:i:s T Y", $ban['expiration_time']) . '**' : 'never**');
+        return $message->reply(implode(PHP_EOL, $return));
     }
     if (str_starts_with($message_content_lower, 'serverstatus')) { //See GitHub Issue #1
         $embed = new Embed($PS13->discord);
@@ -608,31 +602,6 @@ $on_message = function (PS13 $PS13, $message) use ($guild_message, $discord2ooc,
     }
     
     if ($message->member && $guild_message($PS13, $message, $message_content, $message_content_lower)) return;
-};
-
-$bancheck = function (PS13 $PS13, string $ckey): bool
-{
-    return false;
-    /* Deprecated, bans are now stored in SQL
-    $return = false;
-    if ($filecheck1 = fopen($PS13->files['bans'], 'r')) {
-        while (($fp = fgets($filecheck1, 4096)) !== false) {
-            //str_replace(PHP_EOL, '', $fp); // Is this necessary?
-            $linesplit = explode(';', trim(str_replace('|||', '', $fp))); //$split_ckey[0] is the ckey
-            if ((count($linesplit)>=8) && ($linesplit[8] == $ckey)) $return = true;
-        }
-        fclose($filecheck1);
-    } else $PS13->logger->warning("unable to open `{$PS13->files['bans']}`");
-    return $return;
-    */
-};
-$join_roles = function (PS13 $PS13, $member) use ($bancheck)
-{
-    if ($member->guild_id != $PS13->PS13_guild_id) return;
-    if ($item = $PS13->verified->get('discord', $member->id)) {
-        if (! $bancheck($PS13, $item['ss13'])) return $member->setroles([$PS13->role_ids['unbearded']], "verified join {$item['ss13']}");
-        return $member->setroles([$PS13->role_ids['unbearded'], $PS13->role_ids['banished']], "bancheck join {$item['ss13']}");
-    }
 };
 
 $serverinfo_fetch = function ($PS13): array
@@ -833,8 +802,12 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
     });
     $PS13->discord->listenCommand('bancheck', function ($interaction) use ($PS13, $bancheck) {
     if (! $item = $PS13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
-        if ($bancheck($PS13, $item['ss13'])) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("`{$item['ss13']}` is currently banned on one of the PS13.com servers."), true);
-        return $interaction->respondWithMessage(MessageBuilder::new()->setContent("`{$item['ss13']}` is not currently banned on one of the PS13.com servers."), true);
+        if ($bancheck($PS13, $item['ss13'])) {
+            $return[] = "`{$item['ss13']}` has been banned:";
+            foreach ($PS13->bancheck_temp as $ban) $return[] = "from **{$ban['role']}** by `{$ban['adminwho']}` for **{$ban['reason']}** and expires **" . ($ban['adminwho'] ? 'never**' : date("D M j G:i:s T Y", $ban['expires']) . '**');
+            return $interaction->respondWithMessage(MessageBuilder::new()->setContent(implode(PHP_EOL, $return)), true);
+        }
+        return $interaction->respondWithMessage(MessageBuilder::new()->setContent("`{$item['ss13']}` is not currently banned."), true);
     });
     
     $PS13->discord->listenCommand('unban', function ($interaction) use ($PS13, $unban) {
