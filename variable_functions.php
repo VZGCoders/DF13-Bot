@@ -677,9 +677,11 @@ $serverinfo_parse = function ($PS13): array
         $players = [];
         foreach (array_keys($server) as $key) {
             $p = explode('player', $key); 
-            if (isset($p[1]) && is_numeric($p[1])) $players[] = str_replace(['.', '_', ' '], '', strtolower(urldecode($server[$key])));
+            if (isset($p[1])) {
+                if(is_numeric($p[1])) $players[] = str_replace(['.', '_', ' '], '', strtolower(urldecode($server[$key])));
+            }
         }
-        if (! empty($players)) $return[$index]['Players (' . count($players) . ')'] = [true => implode(', ', $players)];
+        if ($server['players'] || ! empty($players)) $return[$index]['Players (' . (isset($server['players']) ? $server['players'] : count($players) ?? '?') . ')'] = [true => (empty($players) ? 'N/A' : implode(', ', $players))];
         if (isset($server['season'])) $return[$index]['Season'] = [true => urldecode($server['season'])];
         $index++;
     }
