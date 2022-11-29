@@ -570,7 +570,7 @@ $on_message = function (PS13 $PS13, $message) use ($guild_message, $bancheck, $d
                     $data = explode(';', str_replace(['<b>Address</b>: ', '<b>Map</b>: ', '<b>Gamemode</b>: ', '<b>Players</b>: ', '</b>', '<b>'], '', $data));
                     $embed->setColor(0x00ff00);
                     $embed->addFieldValues('PS13 Server Status', 'Online');
-                    if (isset($data[1])) $embed->addFieldValues('Address', '<'.$data[1].'>');
+                    if (isset($data[1])) $embed->addFieldValues('Address', "<{$data[1]}>");
                     if (isset($data[2])) $embed->addFieldValues('Map', $data[2]);
                     if (isset($data[3])) $embed->addFieldValues('Gamemode', $data[3]);
                     if (isset($data[4])) $embed->addFieldValues('Players', $data[4]);
