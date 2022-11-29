@@ -551,7 +551,7 @@ $on_message = function (PS13 $PS13, $message) use ($guild_message, $bancheck, $d
         if (! $ckey = trim(str_replace(['.', '_', ' '], '', substr($message_content_lower, strlen('bancheck'))))) return $message->reply('Wrong format. Please try `bancheck [ckey]`.');
         if (! $bancheck($PS13, $ckey)) return $message->reply("No bans were found for **$ckey**.");
         $return[] = "`$ckey` has been banned:";
-        foreach ($PS13->bancheck_temp as $ban) $return[] = "from **{$ban['role']}** by `{$ban['adminwho']}` for **{$ban['reason']}** and expires **" . ($ban['adminwho'] ? 'never**' : date("D M j G:i:s T Y", $ban['expires']) . '**');
+        foreach ($PS13->bancheck_temp as $ban) $return[] = "from **{$ban['role']}** by `{$ban['a_ckey']}` for **{$ban['reason']}** and expires **" . ($ban['adminwho'] ? 'never**' : date("D M j G:i:s T Y", $ban['expires']) . '**');
         return $message->reply(implode(PHP_EOL, $return));
     }
     if (str_starts_with($message_content_lower, 'serverstatus')) { //See GitHub Issue #1
