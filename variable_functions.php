@@ -65,7 +65,7 @@ $status_changer_timer = function (PS13 $PS13) use ($status_changer_random): void
 };
 
 $ban = function (PS13 $PS13, $array, $message = null): string
-{
+{ //TODO: add ban to database
     $admin = ($message ? $message->author->displayname : $PS13->discord->user->username);
     $txt = "$admin:::{$array[0]}:::{$array[1]}:::{$array[2]}" . PHP_EOL;
     $result = '';
@@ -604,13 +604,27 @@ $on_message = function (PS13 $PS13, $message) use ($guild_message, $bancheck, $d
     if ($message->member && $guild_message($PS13, $message, $message_content, $message_content_lower)) return;
 };
 
+$serverinfo_parseage = function ($PS13): array
+{
+    if (empty($data_json = $PS13->serverinfo)) return [];
+    $PS13->players = [];
+    foreach ($data_json as $server) {
+        if (array_key_exists('ERROR', $server)) continue;
+        //Players
+        foreach (array_keys($server) as $key) {
+            $p = explode('player', $key); 
+            if (isset($p[1]) && is_numeric($p[1])) $PS13->players[] = str_replace(['.', '_', ' '], '', strtolower(urldecode($server[$key])));
+        }
+    }
+    return $PS13->players;
+};
 $serverinfo_fetch = function ($PS13): array
 {
     if (! $data_json = json_decode(file_get_contents("http://{$PS13->ips['vzg']}/servers/serverinfo.json"),  true)) return [];
     return $PS13->serverinfo = $data_json;
 };
-$serverinfo_timer = function ($PS13) use ($serverinfo_fetch): void
-{
+$serverinfo_timer = function ($PS13) use ($serverinfo_fetch/*, $serverinfo_parseage*/): void
+{ //TODO: Add automatic banning of new accounts
     $serverinfo_fetch($PS13);
     $PS13->timers['serverinfo_timer'] = $PS13->discord->getLoop()->addPeriodicTimer(60, function() use ($PS13, $serverinfo_fetch) { $serverinfo_fetch($PS13); });
 };

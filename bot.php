@@ -106,6 +106,7 @@ $options = array(
         'admin-log_channel' => '1046273316756918402', //#admin-log
         'runtime_channel' => '1046308005685248050', #runtime
         'login-logout_channel' => '1046353236891803708', #login-logout_channel
+        'staff-bot' => '712685552155230278', //staff-bot
     ),
     'role_ids' => array(
         'thane' => '1043390003381817362', //Host

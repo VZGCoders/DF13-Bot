@@ -36,9 +36,11 @@ class PS13
     public $ages = []; //$ckey => $age, temporary cache to avoid spamming the Byond REST API, but we don't want to save it to a file because we also use it to check if the account still exists
     public $bans = [];
     public $bancheck_temp = [];
+    public $minimum_age = '-21 days'; //Minimum age of a ckey
     
     public $timers = [];
-    public $serverinfo = [];
+    public $serverinfo = []; //Collected automatically by serverinfo_timer
+    public $players = []; //Collected automatically by serverinfo_timer
     
     public $functions = array(
         'ready' => [],
@@ -349,31 +351,30 @@ class PS13
      * This function is used determine if a byond account is old enough to play on the server
      * false is returned if the account is too young, true is returned if the account is old enough
      * */
-    public function checkByondAge(string $age, string $minimum_age): bool
+    public function checkByondAge(string $age): bool
     {
-        return (strtotime($age) > strtotime($minimum_age)) ? false : true;
+        return (strtotime($age) > strtotime($this->minimum_wage)) ? false : true;
     }
 
     /*
-    * This function is used to check if the user has verified their account
-    * If the have not, it will send a message to the user with instructions on how to verify
-    * If they have, it will check if they have the verified role, and if not, it will add it
+    * This function is used to check if the user has verified their account and is old enough to play
+    * If the account is not old enough, prevent verification, otherwise
+    * If the account is not verified, it will send a message to the user with instructions on how to verify
     */
-    public function verifyProcess(string $ckey, string $discord_id): string
-    {
-        if ($this->verified->has($discord_id)) { $member = $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id); if (! $member->roles->has($this->discord_config[$this->PS13_guild_id]['roles']['verified'])) $member->addRole($this->discord_config[$this->PS13_guild_id]['roles']['verified']); return 'You are already verified!';}
-        if ($this->verified->has($ckey)) return "`$ckey` is already verified!";
-        if (! $this->pending->get('discord', $discord_id)) {
-            if (! $age = $this->getByondAge($ckey)) return "Ckey `$ckey` does not exist!";
-            if (! $this->checkByondAge($age, '-21 days')) { //TODO: Declare the minimum time in the config file instead of hardcoded here
-                if ($ban = $this->functions['misc']['ban']) $this->discord->getChannel('712685552155230278')->sendMessage($ban($this, [$ckey, '999 years', "Byond account $ckey does not meet the requirements to be approved. ($age)"]));
-                return "Ckey `$ckey` is too new! ($age)";
-            }
-            //Check account age before attempting to verify     
-            return 'Login to your profile at https://secure.byond.com/members/-/account and enter this token as your description: `' . $this->generateByondToken($ckey, $discord_id) . PHP_EOL . '`Use the command again once this process has been completed.';
-        }
-        return $this->verifyNew($discord_id)[1]; //TODO: There's supposed to be separate processing for $result[0] being false/true but I don't remember why...
-    }
+   public function verifyProcess(string $ckey, string $discord_id): string
+   { //TODO: Add automatic banning of new accounts
+       if ($this->verified->has($discord_id)) { $member = $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id); if (! $member->roles->has($this->role_ids['unbearded']) && ! $member->roles->has($this->role_ids['bearded'])) $member->addRole($this->role_ids['unbearded']); return 'You are already verified!';}
+       if ($this->verified->has($ckey)) return "`$ckey` is already verified!";
+       if (! $this->pending->get('discord', $discord_id)) {
+           if (! $age = $this->getByondAge($ckey)) return "Ckey `$ckey` does not exist!";
+           if (! $this->checkByondAge($age)) {
+               if ($ban = $this->functions['misc']['ban']) $this->discord->getChannel($this->channel_ids['staff_bot'])->sendMessage($ban($this, [$ckey, '999 years', "Byond account $ckey does not meet the requirements to be approved. ($age)"]));
+               return "Ckey `$ckey` is too new! ($age)";
+           }
+           return 'Login to your profile at https://secure.byond.com/members/-/account and enter this token as your description: `' . $this->generateByondToken($ckey, $discord_id) . PHP_EOL . '`Use the command again once this process has been completed.';
+       }
+       return $this->verifyNew($discord_id)[1]; //TODO: There's supposed to be separate processing for $result[0] being false/true but I don't remember why...
+   }
 
     /*
     * This function is called when a user still needs to set their token in their BYOND description and call the approveme prompt
