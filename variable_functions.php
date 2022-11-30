@@ -616,7 +616,7 @@ $serverinfo_timer = function ($PS13) use ($serverinfo_fetch): void
 };
 $serverinfo_parse = function ($PS13): array
 {
-    if (empty($data_json = $PS13->serverinfo)) return []; //update this to pull from the cache
+    if (empty($data_json = $PS13->serverinfo)) return [];
     $return = [];
 
     $server_info[0] = ['name' => 'TDM', 'host' => 'Taislin', 'link' => "<byond://{$PS13->ips['civ13']}:{$PS13->ports['tdm']}>"];
