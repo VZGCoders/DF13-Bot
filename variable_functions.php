@@ -604,7 +604,7 @@ $on_message = function (PS13 $PS13, $message) use ($guild_message, $bancheck, $d
     if ($message->member && $guild_message($PS13, $message, $message_content, $message_content_lower)) return;
 };
 
-$serverinfo_parseage = function ($PS13): array
+$serverinfo_players = function ($PS13): array
 {
     if (empty($data_json = $PS13->serverinfo)) return [];
     $PS13->players = [];
@@ -623,7 +623,7 @@ $serverinfo_fetch = function ($PS13): array
     if (! $data_json = json_decode(file_get_contents("http://{$PS13->ips['vzg']}/servers/serverinfo.json"),  true)) return [];
     return $PS13->serverinfo = $data_json;
 };
-$serverinfo_timer = function ($PS13) use ($serverinfo_fetch/*, $serverinfo_parseage*/): void
+$serverinfo_timer = function ($PS13) use ($serverinfo_fetch/*, $serverinfo_players*/): void
 { //TODO: Add automatic banning of new accounts
     $serverinfo_fetch($PS13);
     $PS13->timers['serverinfo_timer'] = $PS13->discord->getLoop()->addPeriodicTimer(60, function() use ($PS13, $serverinfo_fetch) { $serverinfo_fetch($PS13); });
