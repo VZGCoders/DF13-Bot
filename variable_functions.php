@@ -26,7 +26,6 @@ $set_ips = function (PS13 $PS13): void
     $PS13->ports = [
         'tdm' => '1714',
         'nomads' => '1715',
-        'persistence' => '7777',
         'bc' => '1717', 
         'ps13' => '7778',
     ];
@@ -635,9 +634,8 @@ $serverinfo_parse = function ($PS13): array
 
     $server_info[0] = ['name' => 'TDM', 'host' => 'Taislin', 'link' => "<byond://{$PS13->ips['civ13']}:{$PS13->ports['tdm']}>"];
     $server_info[1] = ['name' => 'Nomads', 'host' => 'Taislin', 'link' => "<byond://{$PS13->ips['civ13']}:{$PS13->ports['nomads']}>"];
-    $server_info[2] = ['name' => 'Persistence', 'host' => 'ValZarGaming', 'link' => "<byond://{$PS13->ips['vzg']}:{$PS13->ports['persistence']}>"];
-    $server_info[3] = ['name' => 'Blue Colony', 'host' => 'ValZarGaming', 'link' => "<byond://{$PS13->ips['vzg']}:{$PS13->ports['bc']}>"];
-    $server_info[4] = ['name' => 'Pocket Stronghold 13', 'host' => 'ValZarGaming', 'link' => "<byond://{$PS13->ips['vzg']}:{$PS13->ports['ps13']}>"];
+    $server_info[2] = ['name' => 'Blue Colony', 'host' => 'ValZarGaming', 'link' => "<byond://{$PS13->ips['vzg']}:{$PS13->ports['bc']}>"];
+    $server_info[3] = ['name' => 'Pocket Stronghold 13', 'host' => 'ValZarGaming', 'link' => "<byond://{$PS13->ips['vzg']}:{$PS13->ports['ps13']}>"];
     
     $index = 0;
     foreach ($data_json as $server) {
