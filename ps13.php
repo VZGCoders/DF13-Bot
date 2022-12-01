@@ -409,7 +409,7 @@ class PS13
                 $success = true;
                 $message = "`$ckey` has been verified and registered to $discord_id";
                 $this->pending->offsetUnset($discord_id);
-                $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id)->addRole($this->role_ids['unbearded']);
+                $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id)->setRoles([$this->role_ids['unbearded']], "approveme join $ckey");
                 $this->getVerified();
                 break;
             case 403: //Already registered
