@@ -22,19 +22,19 @@ function webapiSnow($string) {
     return preg_match('/^[0-9]{16,20}$/', $string);
 }
 
-$moderator = function (string &$message): false|string
+$moderator = function (string $message): false|string
 { //Function needs to be updated to read messages sent in #ic-emotes, #ooc, and #ahelp
-    $cleaned = null;
+    $cleaned = false;
     $badwords = ['beaner', 'chink', 'chink', 'coon', 'fag', 'gook', 'kike', 'nigg', 'nlgg', 'tranny']; //Move this to a .gitignore'd file?
     foreach ($badwords as $badword) {
         if (str_contains(strtolower($message), $badword)) {
             $filtered = substr($badword, 0, 1);
             for ($x=1;$x<strlen($badword)-2; $x++) $filtered .= '%';
             $filtered .= substr($badword, -1, 1);
-            $cleaned = $message = str_replace($badword, $filtered, $message); //"Blacklisted word ($filtered), please appeal on our discord"
+            $cleaned = str_replace($badword, $filtered, $message); //"Blacklisted word ($filtered), please appeal on our discord"
         }
     }
-    return $cleaned ?? false;
+    return $cleaned;
 };
 
 $external_ip = file_get_contents('http://ipecho.net/plain');
@@ -93,48 +93,49 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
         $message = '';
         $ckey = '';
         $moderator_triggered = false;
+        echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
         switch ($params['method']) {
             case 'ahelpmessage':
                 $channel_id = $PS13->channel_ids['ahelp_channel'];
-                if ($moderated = $moderator($data['$message'])) {
+                if ($moderated = $moderator($data['message'])) {
                     $moderator_triggered = true;
-                    $data['$message'] = $moderated;
+                    $data['message'] = $moderated;
                 }
                 $message .= "**__{$time} AHELP__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'asaymessage':
                 $channel_id = $PS13->channel_ids['asay_channel'];
-                if ($moderated = $moderator($data['$message'])) {
+                if ($moderated = $moderator($data['message'])) {
                     $moderator_triggered = true;
-                    $data['$message'] = $moderated;
+                    $data['message'] = $moderated;
                 }
                 $message .= "**__{$time} ASAY__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
-            case 'oocmessage':
-                $channel_id = $PS13->channel_ids['ooc_channel'];
-                if ($moderated = $moderator($data['$message'])) {
-                    $moderator_triggered = true;
-                    $data['$message'] = $moderated;
-                }
-                $message .= "**__{$time} OOC__ {$data['ckey']}**: " . urldecode($data['message']);
-                $ckey = $data['ckey'];
-                break;
             case 'lobbymessage':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
-                if ($moderated = $moderator($data['$message'])) {
+                if ($moderated = $moderator($data['message'])) {
                     $moderator_triggered = true;
-                    $data['$message'] = $moderated;
+                    $data['message'] = $moderated;
                 }
                 $message .= "**__{$time} LOBBY__ {$data['ckey']}**: " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
+            case 'oocmessage':
+                $channel_id = $PS13->channel_ids['ooc_channel'];
+                if ($moderated = $moderator($data['message'])) {
+                    $moderator_triggered = true;
+                    $data['message'] = $moderated;
+                }
+                $message .= "**__{$time} OOC__ {$data['ckey']}**: " . urldecode($data['message']);
+                $ckey = $data['ckey'];
+                break;
             case 'memessage':
                 $channel_id = $PS13->channel_ids['ic_channel'];
-                if ($moderated = $moderator($data['$message'])) {
+                if (isset($data['message']) && $moderated = $moderator($data['message'])) {
                     $moderator_triggered = true;
-                    $data['$message'] = $moderated;
+                    $data['message'] = $moderated;
                 }
                 $message .= "**__{$time} EMOTE__ {$data['ckey']}** " . urldecode($data['message']);
                 $ckey = $data['ckey'];
