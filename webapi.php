@@ -133,11 +133,13 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 break;
             case 'memessage':
                 $channel_id = $PS13->channel_ids['ic_channel'];
-                if (isset($data['message']) && $moderated = $moderator($data['message'])) {
-                    $moderator_triggered = true;
-                    $data['message'] = $moderated;
+                if (isset($data['message'])) {
+                    if ($moderated = $moderator($data['message'])) {
+                        $moderator_triggered = true;
+                        $data['message'] = $moderated;
+                    }
+                    $message .= "**__{$time} EMOTE__ {$data['ckey']}** " . urldecode($data['message']);
                 }
-                $message .= "**__{$time} EMOTE__ {$data['ckey']}** " . urldecode($data['message']);
                 $ckey = $data['ckey'];
                 break;
             case 'garbage':

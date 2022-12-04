@@ -617,6 +617,14 @@ $serverinfo_players = function ($PS13): array
     }
     return $PS13->players;
 };
+$playercount_channel_update = function ($PS13, $count = 0): void
+{
+    if ($channel = $PS13->discord->getChannel($PS13->channel_ids['playercount']))
+        if (substr($channel->name, 8) != $count) {
+            $channel->name = "players-$count";
+            $channel->guild->channels->save($channel);
+        }
+};
 $serverinfo_fetch = function ($PS13): array
 {
     if (! $data_json = json_decode(file_get_contents("http://{$PS13->ips['vzg']}/servers/serverinfo.json"),  true)) return [];
@@ -627,7 +635,7 @@ $serverinfo_timer = function ($PS13) use ($serverinfo_fetch/*, $serverinfo_playe
     $serverinfo_fetch($PS13);
     $PS13->timers['serverinfo_timer'] = $PS13->discord->getLoop()->addPeriodicTimer(60, function() use ($PS13, $serverinfo_fetch) { $serverinfo_fetch($PS13); });
 };
-$serverinfo_parse = function ($PS13): array
+$serverinfo_parse = function ($PS13) use ($playercount_channel_update): array
 {
     if (empty($data_json = $PS13->serverinfo)) return [];
     $return = [];
@@ -640,7 +648,10 @@ $serverinfo_parse = function ($PS13): array
     $index = 0;
     foreach ($data_json as $server) {
         $server_info_hard = array_shift($server_info);
-        if (array_key_exists('ERROR', $server)) continue;
+        if (array_key_exists('ERROR', $server)) {
+            $index++;
+            continue;
+        }
         if (isset($server_info_hard['name'])) $return[$index]['Server'] = [false => $server_info_hard['name'] . PHP_EOL . $server_info_hard['link']];
         if (isset($server_info_hard['host'])) $return[$index]['Host'] = [true => $server_info_hard['host']];
         //Round time
@@ -661,10 +672,9 @@ $serverinfo_parse = function ($PS13): array
         $players = [];
         foreach (array_keys($server) as $key) {
             $p = explode('player', $key); 
-            if (isset($p[1])) {
-                if(is_numeric($p[1])) $players[] = str_replace(['.', '_', ' '], '', strtolower(urldecode($server[$key])));
-            }
+            if (isset($p[1])) if(is_numeric($p[1])) $players[] = str_replace(['.', '_', ' '], '', strtolower(urldecode($server[$key])));
         }
+        if ($index == 3) $playercount_channel_update($PS13, (isset($server['players']) ? $server['players'] : count($players) ?? 0));
         if ($server['players'] || ! empty($players)) $return[$index]['Players (' . (isset($server['players']) ? $server['players'] : count($players) ?? '?') . ')'] = [true => (empty($players) ? 'N/A' : implode(', ', $players))];
         if (isset($server['season'])) $return[$index]['Season'] = [true => urldecode($server['season'])];
         $index++;
