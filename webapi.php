@@ -102,7 +102,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                     $data['message'] = $moderated;
                 }
                 $message .= "**__{$time} AHELP__ {$data['ckey']}**: " . urldecode($data['message']);
-                $ckey = $data['ckey'];
+                $ckey = str_replace(['.', '_', ' '], '', strtolower($data['ckey']));
                 break;
             case 'asaymessage':
                 $channel_id = $PS13->channel_ids['asay_channel'];
@@ -111,7 +111,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                     $data['message'] = $moderated;
                 }
                 $message .= "**__{$time} ASAY__ {$data['ckey']}**: " . urldecode($data['message']);
-                $ckey = $data['ckey'];
+                $ckey = str_replace(['.', '_', ' '], '', strtolower($data['ckey']));
                 break;
             case 'lobbymessage':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
@@ -120,7 +120,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                     $data['message'] = $moderated;
                 }
                 $message .= "**__{$time} LOBBY__ {$data['ckey']}**: " . urldecode($data['message']);
-                $ckey = $data['ckey'];
+                $ckey = str_replace(['.', '_', ' '], '', strtolower($data['ckey']));
                 break;
             case 'oocmessage':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
@@ -129,7 +129,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                     $data['message'] = $moderated;
                 }
                 $message .= "**__{$time} OOC__ {$data['ckey']}**: " . urldecode($data['message']);
-                $ckey = $data['ckey'];
+                $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
                 break;
             case 'memessage':
                 $channel_id = $PS13->channel_ids['ic_channel'];
@@ -140,12 +140,12 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                     }
                     $message .= "**__{$time} EMOTE__ {$data['ckey']}** " . urldecode($data['message']);
                 }
-                $ckey = $data['ckey'];
+                $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
                 break;
             case 'garbage':
                 $channel_id = $PS13->channel_ids['admin-log_channel'];
                 $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags($data['message']);
-                $ckey = $data['ckey'];
+                $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
                 break;
             case 'token':
                 echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
@@ -158,7 +158,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             case 'login':
                 $channel_id = $PS13->channel_ids['login-logout_channel'];
                 $message .= "{$data['ckey']} logged in.";
-                $ckey = explode(' ', $data['ckey'])[0];
+                $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
                 break;
             case 'logout':
                 $channel_id = $PS13->channel_ids['login-logout_channel'];
