@@ -144,8 +144,9 @@ class PS13
                     if(! empty($this->functions['message'])) foreach ($this->functions['message'] as $func) $func($this, $message);
                     else $this->logger->debug('No message functions found!');
                 });
-                $this->discord->on('GUILD_MEMBER_ADD', function ($guildmember) {
-                    if(! empty($this->functions['GUILD_MEMBER_ADD'])) foreach ($this->functions['GUILD_MEMBER_ADD'] as $func) $func($this, $guildmember);
+                $this->discord->on('GUILD_MEMBER_ADD', function ($member) {
+                    $this->joinRoles($member);
+                    if(! empty($this->functions['GUILD_MEMBER_ADD'])) foreach ($this->functions['GUILD_MEMBER_ADD'] as $func) $func($this, $member);
                     else $this->logger->debug('No message functions found!');
                 });
                 $this->discord->on('GUILD_CREATE', function (Guild $guild)
@@ -420,5 +421,12 @@ class PS13
         }
         curl_close($ch);
         return [$success, $message];
+    }
+    
+    public function joinRoles($member)
+    { //Move into class
+        if ($member->guild_id == $this->PS13_guild_id)
+            if ($item = $this->verified->get('discord', $member->id))
+                $member->setroles([$this->role_ids['unbearded']], "verified join {$item['ss13']}");
     }
 }

@@ -420,14 +420,6 @@ $bancheck = function (PS13 $PS13, string $ckey): bool
     }
     return $return;
 };
-$join_roles = function (PS13 $PS13, $member) use ($bancheck)
-{
-    if ($member->guild_id != $PS13->PS13_guild_id) return;
-    if ($item = $PS13->verified->get('discord', $member->id)) {
-        if (! $bancheck($PS13, $item['ss13'])) return $member->setroles([$PS13->role_ids['unbearded']], "verified join {$item['ss13']}");
-        return $member->setroles([$PS13->role_ids['unbearded'], $PS13->role_ids['banished']], "bancheck join {$item['ss13']}");
-    }
-};
 
 $discord2ooc = function (PS13 $PS13, $author, $string): bool
 {
@@ -621,7 +613,7 @@ $playercount_channel_update = function ($PS13, $count = 0, $prefix = ''): void
 {
     if ($channel = $PS13->discord->getChannel($PS13->channel_ids['playercount']))
         $arr = explode('-', $channel->name);
-        if ( $name = end($arr) != $count) {
+        if ( ($name = end($arr)) != $count) {
             $channel->name = "{$prefix}players-$count";
             $channel->guild->channels->save($channel);
         }
@@ -798,11 +790,13 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
     });
     
     $PS13->discord->listenCommand('stats', function ($interaction) use ($PS13) {
+        $PS13->logger->info('[STATS]');
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('PS13 Stats')->addEmbed($PS13->stats->handle()));
     });
     
-    $PS13->discord->listenCommand('invite', function ($interaction) use ($PS13) {
-        $interaction->respondWithMessage(MessageBuilder::new()->setContent($PS13->discord->application->getInviteURLAttribute('8')), true);
+    $PS13->discord->listenCommand('invite', function ($interaction) /*use ($PS13)*/ {
+        return $interaction->respondWithMessage(MessageBuilder::new()->setContent('Command disabled!'), true);
+        //$interaction->respondWithMessage(MessageBuilder::new()->setContent($PS13->discord->application->getInviteURLAttribute('8')), true);
     });
     
     $PS13->discord->listenCommand('players', function ($interaction) use ($PS13, $serverinfo_parse) {
@@ -824,19 +818,25 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
         return $interaction->respondWithMessage(MessageBuilder::new()->setContent("`{$interaction->data->target_id}` is registered to `{$item['ss13']}`"), true);
     });
     $PS13->discord->listenCommand('bancheck', function ($interaction) use ($PS13, $bancheck) {
-    if (! $item = $PS13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
+        return $interaction->respondWithMessage(MessageBuilder::new()->setContent('Not yet implemented!'), true);
+        /*
+        if (! $item = $PS13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
         if ($bancheck($PS13, $item['ss13'])) {
             $return[] = "`{$item['ss13']}` has been banned:";
             foreach ($PS13->bancheck_temp as $ban) $return[] = "from **{$ban['role']}** by `{$ban['adminwho']}` for **{$ban['reason']}** and expires **" . ($ban['adminwho'] ? 'never**' : date("D M j G:i:s T Y", $ban['expires']) . '**');
             return $interaction->respondWithMessage(MessageBuilder::new()->setContent(implode(PHP_EOL, $return)), true);
         }
         return $interaction->respondWithMessage(MessageBuilder::new()->setContent("`{$item['ss13']}` is not currently banned."), true);
+        */
     });
     
     $PS13->discord->listenCommand('unban', function ($interaction) use ($PS13, $unban) {
+        return $interaction->respondWithMessage(MessageBuilder::new()->setContent('Not yet implemented!'), true);
+        /*
         if (! $item = $PS13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
         $interaction->respondWithMessage(MessageBuilder::new()->setContent("**`{$interaction->user->displayname}`** unbanned **`{$item['ss13']}`**."));
         $unban($PS13, $item['ss13'], $interaction->user->displayname);
+        */
     });
     
     $PS13->discord->listenCommand('restartdf', function ($interaction) use ($PS13, $restart) {

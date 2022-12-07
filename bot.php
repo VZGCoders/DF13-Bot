@@ -136,7 +136,7 @@ $options = array(
             'on_message' => $on_message,
         ],
         'GUILD_MEMBER_ADD' => [
-            'join_roles' => $join_roles,
+            //
         ],
         'misc' => [ //Custom functions
             'status_changer' => $status_changer,
