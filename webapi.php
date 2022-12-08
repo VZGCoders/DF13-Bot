@@ -146,7 +146,10 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 $channel_id = $PS13->channel_ids['admin-log_channel'];
                 $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags($data['message']);
                 //$ckey = str_replace(['.', '_', ' '], '', strtolower($data['ckey']));
-                $ckey = explode('/', substr(strip_tags($data['message']), 4))[0];
+                $arr = explode(' ', strip_tags($data['message']));
+                $trigger = $arr[3];
+                if ($trigger == 'logout') $ckey = explode('/', $arr[4])[0];
+                else $ckey = explode('/', substr(strip_tags($data['message']), 4))[0];
                 echo "[GARBAGE CKEY] $ckey" . PHP_EOL;
                 break;
             case 'token':
@@ -176,6 +179,9 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             case 'runtimemessage':
                 $channel_id = $PS13->channel_ids['runtime_channel'];
                 $message .= "**__{$time} RUNTIME__**: " . strip_tags($data['message']);
+                $trigger = explode(' ', $data['message'])[1];
+                if ($trigger == 'ListVarEdit') $ckey = str_replace(['.', '_', ' '], '', explode(':', strtolower(substr($data['message'], 19)))[0]);
+                elseif ($trigger == 'VarEdit') $ckey = str_replace(['.', '_', ' '], '', explode('/', strtolower(substr($data['message'], 15)))[0]);
                 break;
             default:
                 return new Response(400, ['Content-Type' => 'text/plain'], 'Invalid Parameter');
