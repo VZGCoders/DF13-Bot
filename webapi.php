@@ -129,7 +129,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                     $data['message'] = $moderated;
                 }
                 $message .= "**__{$time} OOC__ {$data['ckey']}**: " . urldecode($data['message']);
-                $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
+                $ckey = str_replace(['.', '_', ' '], '', strtolower($data['ckey']));
                 break;
             case 'memessage':
                 $channel_id = $PS13->channel_ids['ic_channel'];
@@ -140,12 +140,14 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                     }
                     $message .= "**__{$time} EMOTE__ {$data['ckey']}** " . urldecode($data['message']);
                 }
-                $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
+                $ckey = str_replace(['.', '_', ' '], '', strtolower($data['ckey']));
                 break;
             case 'garbage':
                 $channel_id = $PS13->channel_ids['admin-log_channel'];
                 $message .= "**__{$time} GARBAGE__ {$data['ckey']}**: " . strip_tags($data['message']);
-                $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
+                //$ckey = str_replace(['.', '_', ' '], '', strtolower($data['ckey']));
+                $ckey = explode('/', substr(strip_tags($data['message']), 4))[0];
+                echo "[GARBAGE CKEY] $ckey" . PHP_EOL;
                 break;
             case 'token':
                 echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
@@ -158,7 +160,7 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
             case 'login':
                 $channel_id = $PS13->channel_ids['login-logout_channel'];
                 $message .= "{$data['ckey']} logged in.";
-                $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
+                $ckey = str_replace(['.', '_', ' '], '', strtolower($data['ckey']));
                 break;
             case 'logout':
                 $channel_id = $PS13->channel_ids['login-logout_channel'];
