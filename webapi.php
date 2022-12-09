@@ -148,12 +148,9 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 //$ckey = str_replace(['.', '_', ' '], '', strtolower($data['ckey']));
                 $arr = explode(' ', strip_tags($data['message']));
                 $trigger = $arr[3];
-                if ($trigger == 'logout') $ckey = explode('/', $arr[4])[0];
+                if ($trigger == 'logout:') $ckey = explode('/', $arr[4])[0];
+                elseif ($trigger == 'login:') $ckey = explode('/', $arr[4])[0];
                 else $ckey = explode('/', substr(strip_tags($data['message']), 4))[0];
-                echo "[GARBAGE CKEY] $ckey" . PHP_EOL;
-                break;
-            case 'token':
-                echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
                 break;
             case 'respawn_notice':
                 $channel_id = $PS13->channel_ids['ooc_channel'];
@@ -170,9 +167,8 @@ $webapi = new HttpServer($loop, function (ServerRequestInterface $request) use (
                 $message .= "{$data['ckey']} logged out.";
                 $ckey = strtolower(str_replace(['.', '_', ' '], '', explode('[DC]', $data['ckey'])[0]));
                 break;
+            case 'token':
             case 'roundstatus':
-                echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
-                break;
             case 'status_update':
                 echo "[DATA FOR {$params['method']}]: "; var_dump($params['data']); echo PHP_EOL;
                 break;
