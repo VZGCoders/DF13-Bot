@@ -613,7 +613,7 @@ $playercount_channel_update = function ($PS13, $count = 0, $prefix = ''): void
 {
     if ($channel = $PS13->discord->getChannel($PS13->channel_ids['playercount']))
         $arr = explode('-', $channel->name);
-        if ( ($name = end($arr)) != $count) {
+        if ( (end($arr)) != $count) {
             $channel->name = "{$prefix}players-$count";
             $channel->guild->channels->save($channel);
         }
