@@ -623,11 +623,6 @@ $serverinfo_fetch = function ($PS13): array
     if (! $data_json = json_decode(file_get_contents("http://{$PS13->ips['vzg']}/servers/serverinfo.json"),  true)) return [];
     return $PS13->serverinfo = $data_json;
 };
-$serverinfo_timer = function ($PS13) use ($serverinfo_fetch/*, $serverinfo_players*/): void
-{ //TODO: Add automatic banning of new accounts
-    $serverinfo_fetch($PS13);
-    $PS13->timers['serverinfo_timer'] = $PS13->discord->getLoop()->addPeriodicTimer(60, function() use ($PS13, $serverinfo_fetch) { $serverinfo_fetch($PS13); });
-};
 $serverinfo_parse = function ($PS13) use ($playercount_channel_update): array
 {
     if (empty($data_json = $PS13->serverinfo)) return [];
@@ -674,8 +669,12 @@ $serverinfo_parse = function ($PS13) use ($playercount_channel_update): array
     }
     return $return;
 };
-
-$slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart, $serverinfo_parse): void
+$serverinfo_timer = function ($PS13) use ($serverinfo_fetch, $serverinfo_parse): void
+{ //TODO: Add automatic banning of new accounts
+    $serverinfo_fetch($PS13);
+    $PS13->timers['serverinfo_timer'] = $PS13->discord->getLoop()->addPeriodicTimer(60, function() use ($PS13, $serverinfo_fetch, $serverinfo_parse) { $serverinfo_fetch($PS13); $serverinfo_parse($PS13); });
+};
+$slash_init = function (PS13 $PS13, $commands) use ($restart, $serverinfo_parse): void
 { //ready_slash
     //if ($command = $commands->get('name', 'ping')) $commands->delete($command->id);
     if (! $commands->get('name', 'ping')) $commands->save(new Command($PS13->discord, [
@@ -745,7 +744,8 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
         'default_member_permissions' => (string) new RolePermission($PS13->discord, ['moderate_members' => true]),
     ]));
     
-    $PS13->discord->guilds->get('id', $PS13->PS13_guild_id)->commands->freshen()->done( function ($commands) use ($PS13) {
+    $PS13->discord->guilds->get('id', $PS13->PS13_guild_id)->commands->freshen()->done( function ($commands) use ($PS13): void
+    {
         //if ($command = $commands->get('name', 'unban')) $commands->delete($command->id);
         if (! $commands->get('name', 'unban')) $commands->save(new Command($PS13->discord, [
             'type' => Command::USER,
@@ -764,11 +764,13 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
         ]));
     });
     
-    $PS13->discord->listenCommand('ping', function ($interaction) use ($PS13) {
+    $PS13->discord->listenCommand('ping', function ($interaction): void
+    {
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Pong!'));
     });
     
-    $PS13->discord->listenCommand('restart', function ($interaction) use ($PS13) {
+    $PS13->discord->listenCommand('restart', function ($interaction) use ($PS13): void
+    {
         $PS13->logger->info('[RESTART]');
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Restarting...'));
         $PS13->discord->getLoop()->addTimer(5, function () use ($PS13) {
@@ -777,48 +779,57 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
         });
     });
     
-    $PS13->discord->listenCommand('pull', function ($interaction) use ($PS13) {
+    $PS13->discord->listenCommand('pull', function ($interaction) use ($PS13): void
+    {
         $PS13->logger->info('[GIT PULL]');
         \execInBackground('git pull');
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Updating code from GitHub...'));
     });
     
-    $PS13->discord->listenCommand('update', function ($interaction) use ($PS13) {
+    $PS13->discord->listenCommand('update', function ($interaction) use ($PS13): void
+    {
         $PS13->logger->info('[COMPOSER UPDATE]');
         \execInBackground('composer update');
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('Updating dependencies...'));
     });
     
-    $PS13->discord->listenCommand('stats', function ($interaction) use ($PS13) {
+    $PS13->discord->listenCommand('stats', function ($interaction) use ($PS13): void
+    {
         $PS13->logger->info('[STATS]');
         $interaction->respondWithMessage(MessageBuilder::new()->setContent('PS13 Stats')->addEmbed($PS13->stats->handle()));
     });
     
-    $PS13->discord->listenCommand('invite', function ($interaction) /*use ($PS13)*/ {
-        return $interaction->respondWithMessage(MessageBuilder::new()->setContent('Command disabled!'), true);
+    $PS13->discord->listenCommand('invite', function ($interaction): void
+    {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Command disabled!'), true);
         //$interaction->respondWithMessage(MessageBuilder::new()->setContent($PS13->discord->application->getInviteURLAttribute('8')), true);
     });
     
-    $PS13->discord->listenCommand('players', function ($interaction) use ($PS13, $serverinfo_parse) {
-        if (empty($data = $serverinfo_parse($PS13))) return $interaction->respondWithMessage(MessageBuilder::new()->setContent('Unable to fetch serverinfo.json, webserver might be down'), true);
-        $embed = new Embed($PS13->discord);
-        foreach ($data as $server)
-             foreach ($server as $key => $array)
-                foreach ($array as $inline => $value)
-                    $embed->addFieldValues($key, $value, $inline);
-        $embed->setFooter(($PS13->github ?  "{$PS13->github}" . PHP_EOL : '') . "{$PS13->discord->username} by Valithor#5947");
-        $embed->setColor(0xe1452d);
-        $embed->setTimestamp();
-        $embed->setURL('');
-        return $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed));
+    $PS13->discord->listenCommand('players', function ($interaction) use ($PS13, $serverinfo_parse): void
+    {
+        if (empty($data = $serverinfo_parse($PS13))) $interaction->respondWithMessage(MessageBuilder::new()->setContent('Unable to fetch serverinfo.json, webserver might be down'), true);
+        else {
+            $embed = new Embed($PS13->discord);
+            foreach ($data as $server)
+                foreach ($server as $key => $array)
+                    foreach ($array as $inline => $value)
+                        $embed->addFieldValues($key, $value, $inline);
+            $embed->setFooter(($PS13->github ?  "{$PS13->github}" . PHP_EOL : '') . "{$PS13->discord->username} by Valithor#5947");
+            $embed->setColor(0xe1452d);
+            $embed->setTimestamp();
+            $embed->setURL('');
+            $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed));
+        }
     });
     
-    $PS13->discord->listenCommand('ckey', function ($interaction) use ($PS13) {
-        if (! $item = $PS13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
-        return $interaction->respondWithMessage(MessageBuilder::new()->setContent("`{$interaction->data->target_id}` is registered to `{$item['ss13']}`"), true);
+    $PS13->discord->listenCommand('ckey', function ($interaction) use ($PS13): void
+    {
+        if (! $item = $PS13->verified->get('discord', $interaction->data->target_id)) $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
+        else $interaction->respondWithMessage(MessageBuilder::new()->setContent("`{$interaction->data->target_id}` is registered to `{$item['ss13']}`"), true);
     });
-    $PS13->discord->listenCommand('bancheck', function ($interaction) use ($PS13, $bancheck) {
-        return $interaction->respondWithMessage(MessageBuilder::new()->setContent('Not yet implemented!'), true);
+    $PS13->discord->listenCommand('bancheck', function ($interaction): void
+    {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Not yet implemented!'), true);
         /*
         if (! $item = $PS13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
         if ($bancheck($PS13, $item['ss13'])) {
@@ -830,8 +841,9 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
         */
     });
     
-    $PS13->discord->listenCommand('unban', function ($interaction) use ($PS13, $unban) {
-        return $interaction->respondWithMessage(MessageBuilder::new()->setContent('Not yet implemented!'), true);
+    $PS13->discord->listenCommand('unban', function ($interaction): void
+    {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent('Not yet implemented!'), true);
         /*
         if (! $item = $PS13->verified->get('discord', $interaction->data->target_id)) return $interaction->respondWithMessage(MessageBuilder::new()->setContent("<@{$interaction->data->target_id}> is not currently verified with a byond username or it does not exist in the cache yet"), true);
         $interaction->respondWithMessage(MessageBuilder::new()->setContent("**`{$interaction->user->displayname}`** unbanned **`{$item['ss13']}`**."));
@@ -839,8 +851,9 @@ $slash_init = function (PS13 $PS13, $commands) use ($bancheck, $unban, $restart,
         */
     });
     
-    $PS13->discord->listenCommand('restartdf', function ($interaction) use ($PS13, $restart) {
-    $interaction->respondWithMessage(MessageBuilder::new()->setContent("Attempted to kill, update, and bring up PS13 <byond://{$PS13->ips['vzg']}:{$PS13->ports['ps13']}>"));
+    $PS13->discord->listenCommand('restartdf', function ($interaction) use ($PS13, $restart): void
+    {
+        $interaction->respondWithMessage(MessageBuilder::new()->setContent("Attempted to kill, update, and bring up PS13 <byond://{$PS13->ips['vzg']}:{$PS13->ports['ps13']}>"));
         $restart($PS13);
     });
     /*For deferred interactions
