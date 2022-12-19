@@ -352,7 +352,7 @@ class PS13
      * */
     public function checkByondAge(string $age): bool
     {
-        return (strtotime($age) > strtotime($this->minimum_wage)) ? false : true;
+        return (strtotime($age) > strtotime($this->minimum_age)) ? false : true;
     }
 
     /*
