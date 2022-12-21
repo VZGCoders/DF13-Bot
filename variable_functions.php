@@ -620,7 +620,7 @@ $playercount_channel_update = function ($PS13, $count = 0, $prefix = ''): void
 };
 $serverinfo_fetch = function ($PS13): array
 {
-    if (! $data_json = json_decode(file_get_contents("http://{$PS13->ips['vzg']}/servers/serverinfo.json"),  true)) return [];
+    if (! $data_json = json_decode(file_get_contents("http://{$PS13->ips['vzg']}/servers/serverinfo.json", false, stream_context_create(array('http'=>array('timeout' => 5, )))),  true)) return [];
     return $PS13->serverinfo = $data_json;
 };
 $serverinfo_parse = function ($PS13) use ($playercount_channel_update): array
