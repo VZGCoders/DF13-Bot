@@ -18,6 +18,7 @@ use Monolog\Handler\StreamHandler;
 use React\EventLoop\Loop;
 use React\EventLoop\StreamSelectLoop;
 use React\Http\Browser;
+use React\Http\HttpServer;
 use React\Filesystem\Factory as FilesystemFactory;
 
 class PS13
@@ -28,8 +29,10 @@ class PS13
     public $filesystem;
     public Logger $logger;
     public $stats;
+
+    public $filecache_path = '';
     
-    protected $webapi;
+    protected HttpServer $webapi;
     
     public collection $verified; //This probably needs a default value for Collection, maybe make it a Repository instead?
     public collection $pending;
@@ -54,6 +57,12 @@ class PS13
     public string $PS13_guild_id = '1043390003285344306';
     public string $verifier_feed_channel_id = '1032411190695055440';
     public string $ps13_token = '';
+
+    public string $github = 'https://github.com/VZGCoders/Pocket-Stronghold-13'; //Link to the bot's github page
+    public string $banappeal = 'discord.gg slash wP6cdD3trz'; //Players can appeal their bans here (cannot contain special characters like / or &, blame the current Python implementation)
+    public string $verifyurl = 'http://valzargaming.com:8080/verified/'; //Where the bot submit verification of a ckey to and where it will retrieve the list of verified ckeys from
+    public string $serverinfourl = ''; //Where the bot will retrieve server information from
+    public bool $webserver_online = false;
     
     public array $files = [];
     public array $ips = [];
@@ -262,7 +271,7 @@ class PS13
     */
     public function getVerified(): Collection
     {
-        if ($verified_array = json_decode(file_get_contents('http://valzargaming.com:8080/verified/'), true)) {
+        if ($verified_array = json_decode(file_get_contents($this->verifyurl), true)) {
             $this->VarSave('verified.json', $verified_array);
             return $this->verified = new Collection($verified_array, 'discord');
         }
@@ -362,13 +371,14 @@ class PS13
     */
    public function verifyProcess(string $ckey, string $discord_id): string
    { //TODO: Add automatic banning of new accounts
-       if ($this->verified->has($discord_id)) { $member = $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id); if (! $member->roles->has($this->role_ids['unbearded']) && ! $member->roles->has($this->role_ids['bearded'])) $member->addRole($this->role_ids['unbearded']); return 'You are already verified!';}
-       if ($this->verified->has($ckey)) return "`$ckey` is already verified!";
-       if (! $this->pending->get('discord', $discord_id)) {
-           if (! $age = $this->getByondAge($ckey)) return "Ckey `$ckey` does not exist!";
-           if (! $this->checkByondAge($age)) {
-               if ($ban = $this->functions['misc']['ban']) $this->discord->getChannel($this->channel_ids['staff_bot'])->sendMessage($ban($this, [$ckey, '999 years', "Byond account $ckey does not meet the requirements to be approved. ($age)"]));
-               return "Ckey `$ckey` is too new! ($age)";
+        $this->getVerified();
+        if ($this->verified->has($discord_id)) { $member = $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id); if (! $member->roles->has($this->role_ids['unbearded']) && ! $member->roles->has($this->role_ids['bearded'])) $member->setRoles([$this->role_ids['unbearded']], "approveme join $ckey"); return 'You are already verified!';}
+        if ($this->verified->has($ckey)) return "`$ckey` is already verified! If this is your account, please ask Valithor to delete this entry.";
+        if (! $this->pending->get('discord', $discord_id)) {
+            if (! $age = $this->getByondAge($ckey)) return "Ckey `$ckey` does not exist!";
+            if (! $this->checkByondAge($age)) {
+                if ($ban = $this->functions['misc']['ban']) $this->discord->getChannel($this->channel_ids['staff_bot'])->sendMessage($ban($this, [$ckey, '999 years', "Byond account $ckey does not meet the requirements to be approved. ($age)"]));
+                return "Ckey `$ckey` is too new! ($age)";
            }
            return 'Login to your profile at https://secure.byond.com/members/-/account and enter this token as your description: `' . $this->generateByondToken($ckey, $discord_id) . PHP_EOL . '`Use the command again once this process has been completed.';
        }
