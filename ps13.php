@@ -406,7 +406,7 @@ class PS13
         $success = false;
         $message = '';
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, 'http://valzargaming.com:8080/verified/');
+        curl_setopt($ch, CURLOPT_URL, $this->verifyurl);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type' => 'application/x-www-form-urlencoded']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //return the transfer as a string    
         curl_setopt($ch, CURLOPT_POST, TRUE);
