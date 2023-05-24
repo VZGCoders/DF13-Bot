@@ -374,6 +374,9 @@ class PS13
         $this->getVerified();
         if ($this->verified->has($discord_id)) { $member = $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id); if (! $member->roles->has($this->role_ids['unbearded']) && ! $member->roles->has($this->role_ids['bearded'])) $member->setRoles([$this->role_ids['unbearded']], "approveme join $ckey"); return 'You are already verified!';}
         if ($this->verified->has($ckey)) return "`$ckey` is already verified! If this is your account, please ask Valithor to delete this entry.";
+        
+        //Disabled for now, defer to Civ13's verification system
+        return "Please use the Civ13 verification system at https://civ13.com/discord to verify your BYOND account, then come back here and use the command again.";
         if (! $this->pending->get('discord', $discord_id)) {
             if (! $age = $this->getByondAge($ckey)) return "Ckey `$ckey` does not exist!";
             if (! $this->checkByondAge($age)) {
