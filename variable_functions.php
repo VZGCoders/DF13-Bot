@@ -871,8 +871,8 @@ $slash_init = function (PS13 $PS13, $commands) use ($restart, $serverinfo_parse)
 
 $on_ready = function (PS13 $PS13): void
 {//on ready
-    $PS13->logger->info("logged in as {$PS13->discord->user->displayname} ({$PS13->discord->id})");
-    $PS13->logger->info('------');
+    //$PS13->logger->info("logged in as {$PS13->discord->user->displayname} ({$PS13->discord->id})");
+    //$PS13->logger->info('------');
     
     /* Deprecated
     if (! (isset($PS13->timers['relay_timer'])) || (! $PS13->timers['relay_timer'] instanceof Timer) ) {

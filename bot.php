@@ -122,12 +122,12 @@ $options = array(
     ),
     'functions' => array(
         'ready' => [
-            'on_ready' => $on_ready,
+            //'on_ready' => $on_ready,
             'status_changer_timer' => $status_changer_timer,
             'status_changer_random' => $status_changer_random,
-            'set_ips' => $set_ips,
+            //'set_ips' => $set_ips,
             'ps13_listeners' => $ps13_listeners,
-            'serverinfo_timer' => $serverinfo_timer,
+            //'serverinfo_timer' => $serverinfo_timer,
         ],
         'ready_slash' => [
             'slash_init' => $slash_init,

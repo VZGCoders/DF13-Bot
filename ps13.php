@@ -113,10 +113,12 @@ class PS13
         
         if(isset($options['command_symbol'])) $this->command_symbol = $options['command_symbol'];
         if(isset($options['owner_id'])) $this->owner_id = $options['owner_id'];
+        if(isset($options['technician_id'])) $this->technician_id = $options['technician_id'];
         if(isset($options['github'])) $this->github = $options['github'];
         if(isset($options['PS13_guild_id'])) $this->PS13_guild_id = $options['PS13_guild_id'];
         if(isset($options['verifier_feed_channel_id'])) $this->verifier_feed_channel_id = $options['verifier_feed_channel_id'];
         if(isset($options['ps13_token'])) $this->ps13_token = $options['ps13_token'];
+        if(isset($options['serverinfo_url'])) $this->serverinfo_url = $options['serverinfo_url'];
                 
         if(isset($options['discord'])) $this->discord = $options['discord'];
         elseif(isset($options['discord_options'])) $this->discord = new Discord($options['discord_options']);
@@ -145,6 +147,8 @@ class PS13
         
         if(isset($this->discord)) {
             $this->discord->once('ready', function () {
+                $this->logger->info("logged in as {$this->discord->user->displayname} ({$this->discord->id})");
+                $this->logger->info('------');
                 $this->getVerified(); //Populate verified property with data from DB
                 $this->pending = new Collection([], 'discord');
                 //Initialize configurations
@@ -462,8 +466,8 @@ class PS13
         $this->ips = [
             'nomads' => $this->civ13_ip,
             'tdm' => $this->civ13_ip,
-            'pers' => $this->vzg_ip,
-            'vzg' => $this->vzg_ip,
+            'pers' => $this->external_ip,
+            'vzg' => $this->external_ip,
         ];
         $this->ports = [
             'nomads' => '1715',
@@ -472,7 +476,7 @@ class PS13
             'bc' => '7777', 
             'ps13' => '7778',
         ];
-        if(! $this->serverinfo_url) $this->serverinfo_url = 'http://' . isset($this->ips['vzg']) ? $this->ips['vzg'] : $this->vzg_ip . '/servers/serverinfo.json'; //Default to VZG unless passed manually in config
+        if(! $this->serverinfo_url) $this->serverinfo_url = 'http://' . (isset($this->ips['vzg']) ? $this->ips['vzg'] : $this->vzg_ip) . '/servers/serverinfo.json'; //Default to VZG unless passed manually in config
     }
     /*
     * This function returns the current ckeys playing on the servers as stored in the cache
