@@ -106,6 +106,7 @@ $options = array(
         'runtime_channel' => '1046308005685248050', #runtime
         'login-logout_channel' => '1046353236891803708', #login-logout_channel
         'staff-bot' => '712685552155230278', //#staff-bot
+        'webserver-status' => '1116781510180208682', #webserver-status
         'playercount' => '1048755726719389716', //#players-#
     ),
     'role_ids' => array(

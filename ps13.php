@@ -23,6 +23,11 @@ use React\Filesystem\Factory as FilesystemFactory;
 
 class PS13
 {
+    //public Slash slash;
+    public $vzg_ip = '';
+    public $civ13_ip = '';
+    public $external_ip = '';
+
     public StreamSelectLoop $loop;
     public Discord $discord;
     public Browser $browser;
@@ -44,6 +49,8 @@ class PS13
     public $timers = [];
     public $serverinfo = []; //Collected automatically by serverinfo_timer
     public $players = []; //Collected automatically by serverinfo_timer
+    public array $seen_players = []; //Collected automatically by serverinfo_timer
+    public int $playercount_ticker = 0;
     
     public $functions = array(
         'ready' => [],
@@ -53,15 +60,17 @@ class PS13
     );
     
     public string $command_symbol = '!s';
-    public string $owner_id = '196253985072611328';
+    public string $owner_id = '116927250145869826'; //Valithor Obsidion's Discord ID
+    public string $technician_id = '116927250145869826'; //Valithor Obsidion's Discord ID
+    public string $embed_footer = ''; //Footer for embeds, this is set in the ready event
     public string $PS13_guild_id = '1043390003285344306';
     public string $verifier_feed_channel_id = '1032411190695055440';
     public string $ps13_token = '';
-
-    public string $github = 'https://github.com/VZGCoders/Pocket-Stronghold-13'; //Link to the bot's github page
+    
+    public string $github = 'https://github.com/VZGCoders/PS13-Bot'; //Link to the bot's github page
     public string $banappeal = 'discord.gg slash wP6cdD3trz'; //Players can appeal their bans here (cannot contain special characters like / or &, blame the current Python implementation)
-    public string $verifyurl = 'http://valzargaming.com:8080/verified/'; //Where the bot submit verification of a ckey to and where it will retrieve the list of verified ckeys from
-    public string $serverinfourl = ''; //Where the bot will retrieve server information from
+    public string $verify_url = 'http://valzargaming.com:8080/verified/'; //Where the bot submit verification of a ckey to and where it will retrieve the list of verified ckeys from
+    public string $serverinfo_url = ''; //Where the bot will retrieve server information from
     public bool $webserver_online = false;
     
     public array $files = [];
@@ -130,6 +139,10 @@ class PS13
     */
     protected function afterConstruct()
     {
+        $this->vzg_ip = gethostbyname('www.valzargaming.com');
+        $this->civ13_ip = gethostbyname('www.civ13.com');
+        $this->external_ip = file_get_contents('http://ipecho.net/plain');
+        
         if(isset($this->discord)) {
             $this->discord->once('ready', function () {
                 $this->getVerified(); //Populate verified property with data from DB
@@ -141,6 +154,10 @@ class PS13
                 
                 if (! $tests = $this->VarLoad('tests.json')) $tests = [];
                 $this->tests = $tests;
+
+                $this->embed_footer = ($this->github ?  $this->github . PHP_EOL : '') . "{$this->discord->username} by Valithor#5947";
+                $this->setIPs();
+                $this->serverinfoTimer(); //Start the serverinfo timer and update the serverinfo channel
                 
                 if(! empty($this->functions['ready'])) foreach ($this->functions['ready'] as $func) $func($this);
                 else $this->logger->debug('No ready functions found!');
@@ -271,7 +288,7 @@ class PS13
     */
     public function getVerified(): Collection
     {
-        if ($verified_array = json_decode(file_get_contents($this->verifyurl), true)) {
+        if ($verified_array = json_decode(file_get_contents($this->verify_url), true)) {
             $this->VarSave('verified.json', $verified_array);
             return $this->verified = new Collection($verified_array, 'discord');
         }
@@ -372,18 +389,17 @@ class PS13
    public function verifyProcess(string $ckey, string $discord_id): string
    { //TODO: Add automatic banning of new accounts
         $this->getVerified();
-        if ($this->verified->has($discord_id)) { $member = $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id); if (! $member->roles->has($this->role_ids['unbearded']) && ! $member->roles->has($this->role_ids['bearded'])) $member->setRoles([$this->role_ids['unbearded']], "approveme join $ckey"); return 'You are already verified!';}
-        if ($this->verified->has($ckey)) return "`$ckey` is already verified! If this is your account, please ask Valithor to delete this entry.";
-        
-        //Disabled for now, defer to Civ13's verification system
+        if ($this->verified->has($discord_id)) { $member = $this->discord->guilds->get('id', $this->PS13_guild_id)->members->get('id', $discord_id); if (! $member->roles->has($this->role_ids['unbearded']) && ! $member->roles->has($this->role_ids['bearded'])) $member->addRole($this->role_ids['unbearded']); return 'You are already verified!';}
+        if ($this->verified->has($ckey)) return "`$ckey` is already verified! If this is your account, please ask <@{$this->technician_id}> to delete this entry.";
+
         return "Please use the Civ13 verification system at https://civ13.com/discord to verify your BYOND account, then come back here and use the command again.";
         if (! $this->pending->get('discord', $discord_id)) {
             if (! $age = $this->getByondAge($ckey)) return "Ckey `$ckey` does not exist!";
             if (! $this->checkByondAge($age)) {
                 if ($ban = $this->functions['misc']['ban']) $this->discord->getChannel($this->channel_ids['staff_bot'])->sendMessage($ban($this, [$ckey, '999 years', "Byond account $ckey does not meet the requirements to be approved. ($age)"]));
                 return "Ckey `$ckey` is too new! ($age)";
-           }
-           return 'Login to your profile at https://secure.byond.com/members/-/account and enter this token as your description: `' . $this->generateByondToken($ckey, $discord_id) . PHP_EOL . '`Use the command again once this process has been completed.';
+            }
+            return 'Login to your profile at https://secure.byond.com/members/-/account and enter this token as your description: `' . $this->generateByondToken($ckey, $discord_id) . PHP_EOL . '`Use the command again once this process has been completed.';
        }
        return $this->verifyNew($discord_id)[1]; //TODO: There's supposed to be separate processing for $result[0] being false/true but I don't remember why...
    }
@@ -409,7 +425,7 @@ class PS13
         $success = false;
         $message = '';
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $this->verifyurl);
+        curl_setopt($ch, CURLOPT_URL, $this->verify_url);
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type' => 'application/x-www-form-urlencoded']);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); //return the transfer as a string    
         curl_setopt($ch, CURLOPT_POST, TRUE);
@@ -435,7 +451,189 @@ class PS13
         curl_close($ch);
         return [$success, $message];
     }
+
+    /*
+    * This function defines the IPs and ports of the servers
+    * It is called on ready
+    * TODO: Move definitions into config/constructor?
+    */
+    public function setIPs(): void
+    {
+        $this->ips = [
+            'nomads' => $this->civ13_ip,
+            'tdm' => $this->civ13_ip,
+            'pers' => $this->vzg_ip,
+            'vzg' => $this->vzg_ip,
+        ];
+        $this->ports = [
+            'nomads' => '1715',
+            'tdm' => '1714',
+            'pers' => '1716',
+            'bc' => '7777', 
+            'ps13' => '7778',
+        ];
+        if(! $this->serverinfo_url) $this->serverinfo_url = 'http://' . isset($this->ips['vzg']) ? $this->ips['vzg'] : $this->vzg_ip . '/servers/serverinfo.json'; //Default to VZG unless passed manually in config
+    }
+    /*
+    * This function returns the current ckeys playing on the servers as stored in the cache
+    * It returns an array of ckeys or an empty array if the cache is empty
+    */
+    public function serverinfoPlayers(): array
+    { 
+        if (empty($data_json = $this->serverinfo)) return [];
+        $this->players = [];
+        foreach ($data_json as $server) {
+            if (array_key_exists('ERROR', $server)) continue;
+            foreach (array_keys($server) as $key) {
+                $p = explode('player', $key); 
+                if (isset($p[1]) && is_numeric($p[1])) $this->players[] = str_replace(['.', '_', ' '], '', strtolower(urldecode($server[$key])));
+            }
+        }
+        return $this->players;
+    }
+    public function webserverStatusChannelUpdate(bool $status)
+    {
+        if (! $channel = $this->discord->getChannel($this->channel_ids['webserver-status'])) return;
+        [$webserver_name, $reported_status] = explode('-', $channel->name);
+        if ($this->webserver_online) $status = 'online';
+        else $status = 'offline';
+        if ($reported_status != $status) {
+            $msg = "Webserver is now **{$status}**.";
+            if ($status == 'offline') $msg .= " Webserver technician <@{$this->technician_id}> has been notified.";
+            $channel->sendMessage($msg);
+            $channel->name = "{$webserver_name}-{$status}";
+            $channel->guild->channels->save($channel);
+        }
+    }
+    public function serverinfoFetch(): array
+    {
+        if (! $data_json = json_decode(file_get_contents($this->serverinfo_url, false, stream_context_create(array('http'=>array('timeout' => 5, )))),  true)) {
+            $this->webserverStatusChannelUpdate($this->webserver_online = false);
+            return [];
+        }
+        $this->webserverStatusChannelUpdate($this->webserver_online = true);
+        return $this->serverinfo = $data_json;
+    }
+    private function playercountChannelUpdate(int $count = 0/*, string $prefix = 'ps13'*/)
+    {
+        if ($this->playercount_ticker++ % 10 !== 0) return;
+        if (! $channel = $this->discord->getChannel($this->channel_ids[/*$prefix . */'playercount'])) return;
     
+        [$channelPrefix, $existingCount] = explode('-', $channel->name);
+    
+        if ((int)$existingCount !== $count) {
+            $channel->name = "{$channelPrefix}-{$count}";
+            $channel->guild->channels->save($channel);
+        }
+    }
+    public function serverinfoParse(): array
+    {
+        if (empty($this->serverinfo)) return [];
+    
+        $server_info = [
+            ['name' => 'TDM', 'host' => 'Taislin', 'link' => "<byond://{$this->ips['tdm']}:{$this->ports['tdm']}>", 'prefix' => 'tdm-'],
+            ['name' => 'Nomads', 'host' => 'Taislin', 'link' => "<byond://{$this->ips['nomads']}:{$this->ports['nomads']}>", 'prefix' => 'nomads-'],
+            ['name' => 'Persistence', 'host' => 'ValZarGaming', 'link' => "<byond://{$this->ips['pers']}:{$this->ports['pers']}>", 'prefix' => 'persistence-'],
+            ['name' => 'Blue Colony', 'host' => 'ValZarGaming', 'link' => "<byond://{$this->ips['vzg']}:{$this->ports['bc']}>", 'prefix' => 'bc-'],
+            ['name' => 'Pocket Stronghold 13', 'host' => 'ValZarGaming', 'link' => "<byond://{$this->ips['vzg']}:{$this->ports['ps13']}>", 'prefix' => 'ps-'],
+        ];
+    
+        $return = [];
+        foreach ($this->serverinfo as $index => $server) {
+            $si = array_shift($server_info);
+            $return[$index]['Server'] = [false => $si['name'] . PHP_EOL . $si['link']];
+            $return[$index]['Host'] = [true => $si['host']];
+            if (array_key_exists('ERROR', $server)) {
+                $return[$index] = [];
+                continue;
+            }
+    
+            if (isset($server['roundduration'])) {
+                $rd = explode(":", urldecode($server['roundduration']));
+                $days = floor($rd[0] / 24);
+                $hours = $rd[0] % 24;
+                $minutes = $rd[1];
+                if ($days > 0) $rt = "{$days}d {$hours}h {$minutes}m";
+                else if ($hours > 0) $rt = "{$hours}h {$minutes}m";
+                else $rt = "{$minutes}m";
+                $return[$index]['Round Timer'] = [true => $rt];
+            }
+            if (isset($server['map'])) $return[$index]['Map'] = [true => urldecode($server['map'])];
+            if (isset($server['age'])) $return[$index]['Epoch'] = [true => urldecode($server['age'])];
+            $players = array_filter(array_keys($server), function ($key) {
+                return strpos($key, 'player') === 0 && is_numeric(substr($key, 6));
+            });
+            if (!empty($players)) {
+                $players = array_map(function ($key) use ($server) {
+                    return strtolower(str_replace(['.', '_', ' '], '', urldecode($server[$key])));
+                }, $players);
+                $playerCount = count($players);
+            }
+            elseif (isset($server['players'])) $playerCount = $server['players'];
+            else $playerCount = '?';
+    
+            $return[$index]['Players (' . $playerCount . ')'] = [true => empty($players) ? 'N/A' : implode(', ', $players)];
+    
+            if (isset($server['season'])) $return[$index]['Season'] = [true => urldecode($server['season'])];
+    
+        if ($index >= 4) $this->playercountChannelUpdate(isset($server['players']) ? $server['players'] : count($players) ?? 0/*, $si['prefix']*/);
+        }
+    
+        return $return;
+    }
+    public function serverinfoParsePlayers(): void
+    {
+        $server_info = [
+            0 => ['name' => 'TDM', 'host' => 'Taislin', 'link' => "<byond://{$this->ips['tdm']}:{$this->ports['tdm']}>", 'prefix' => 'tdm-'],
+            1 => ['name' => 'Nomads', 'host' => 'Taislin', 'link' => "<byond://{$this->ips['nomads']}:{$this->ports['nomads']}>", 'prefix' => 'nomads-'],
+            2 => ['name' => 'Persistence', 'host' => 'ValZarGaming', 'link' => "<byond://{$this->ips['pers']}:{$this->ports['pers']}>", 'prefix' => 'persistence-'],
+            3 => ['name' => 'Blue Colony', 'host' => 'ValZarGaming', 'link' => "<byond://{$this->ips['vzg']}:{$this->ports['bc']}>", 'prefix' => 'bc-'],
+            4 => ['name' => 'Pocket Stronghold 13', 'host' => 'ValZarGaming', 'link' => "<byond://{$this->ips['vzg']}:{$this->ports['ps13']}>", 'prefix' => 'ps-']
+        ];
+        //$relevant_servers = array_filter($this->serverinfo, fn($server) => in_array($server['stationname'], ['TDM', 'Nomads', 'Persistence'])); //We need to declare stationname in world.dm first
+
+        $index = 0;
+        //foreach ($relevant_servers as $server) //TODO: We need to declare stationname in world.dm first
+        foreach ($this->serverinfo as $server) {
+            if (array_key_exists('ERROR', $server) || $index < 4) { //We only care about Pocket Stronghold 13
+                $index++; //TODO: Remove this once we have stationname in world.dm
+                continue;
+            }
+        $this->playercountChannelUpdate(isset($server['players']) ? $server['players'] : count(array_map(fn($player) => str_replace(['.', '_', ' '], '', strtolower(urldecode($player))), array_filter($server, function($key) { return str_starts_with($key, 'player') && !str_starts_with($key, 'players'); }, ARRAY_FILTER_USE_KEY)))/*, $server_info[$index]['prefix']*/);
+            $index++; //TODO: Remove this once we have stationname in world.dm
+        }
+    }
+    public function serverinfoTimer(): void
+    {
+        $func = function() {
+            $this->serverinfoFetch(); 
+            $this->serverinfoParsePlayers();
+            /*foreach ($this->serverinfoPlayers() as $ckey) { //PS13 does not automatically ban players
+                if (!in_array($ckey, $this->seen_players) && ! isset($this->permitted[$ckey])) {
+                    $this->seen_players[] = $ckey;
+                    $ckeyinfo = $this->ckeyinfo($ckey);
+                    if ($ckeyinfo['altbanned']) $this->discord->getChannel($this->channel_ids['staff_bot'])->sendMessage(($this->ban([$ckey, '999 years', "Account under investigation. Appeal at {$this->banappeal}"]))); //Automatically ban evaders
+                    else foreach ($ckeyinfo['ips'] as $ip) {
+                        if (in_array($this->IP2Country($ip), $this->blacklisted_countries)) {
+                            $this->discord->getChannel($this->channel_ids['staff_bot'])->sendMessage(($this->ban([$ckey, '999 years', "Account under investigation. Appeal at {$this->banappeal}"])));
+                            break;
+                        } else foreach ($this->blacklisted_regions as $region) if (str_starts_with($ip, $region)) { //Blacklisted regions
+                            $this->discord->getChannel($this->channel_ids['staff_bot'])->sendMessage(($this->ban([$ckey, '999 years', "Account under investigation. Appeal at {$this->banappeal}"])));
+                            break 2;
+                        }
+                    }
+                }
+                if ($this->verified->get('ss13', $ckey)) continue;
+                //if ($this->panic_bunker || ($this->serverinfo[1]['admins'] == 0 && $this->serverinfo[1]['vote'] == 0)) return $this->panicBan($ckey);
+                if (isset($this->ages[$ckey])) continue;
+                //if (! $this->checkByondAge($age = $this->getByondAge($ckey)) && ! isset($this->permitted[$ckey]))
+                    //$this->discord->getChannel($this->channel_ids['staff_bot'])->sendMessage($this->ban([$ckey, '999 years', "Byond account `$ckey` does not meet the requirements to be approved. ($age)"]));
+            }*/
+        };
+        $func();
+        $this->timers['serverinfo_timer'] = $this->discord->getLoop()->addPeriodicTimer(60, function() use ($func) { $func(); });
+    }
+
     public function joinRoles($member)
     { //Move into class
         if ($member->guild_id == $this->PS13_guild_id)
