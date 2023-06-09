@@ -807,18 +807,22 @@ $slash_init = function (PS13 $PS13, $commands) use ($restart, $serverinfo_parse)
     
     $PS13->discord->listenCommand('players', function ($interaction) use ($PS13, $serverinfo_parse): void
     {
-        if (empty($data = $serverinfo_parse($PS13))) $interaction->respondWithMessage(MessageBuilder::new()->setContent('Unable to fetch serverinfo.json, webserver might be down'), true);
+        if (empty($data = $PS13->serverinfoParse())) $interaction->respondWithMessage(MessageBuilder::new()->setContent('Unable to fetch serverinfo.json, webserver might be down'), true);
         else {
             $embed = new Embed($PS13->discord);
             foreach ($data as $server)
                 foreach ($server as $key => $array)
                     foreach ($array as $inline => $value)
                         $embed->addFieldValues($key, $value, $inline);
-            $embed->setFooter(($PS13->github ?  "{$PS13->github}" . PHP_EOL : '') . "{$PS13->discord->username} by Valithor#5947");
+            $embed->setFooter($PS13->embed_footer);
             $embed->setColor(0xe1452d);
             $embed->setTimestamp();
             $embed->setURL('');
-            $interaction->respondWithMessage(MessageBuilder::new()->addEmbed($embed));
+            $messagebuilder = MessageBuilder::new();
+            if ($PS13->webserver_online) $messagebuilder->setContent('Webserver Status: **Online**');
+            else $messagebuilder->setContent('Webserver Status: **Offline**, data is stale.');
+            $messagebuilder->addEmbed($embed);
+            $interaction->respondWithMessage($messagebuilder);
         }
     });
     

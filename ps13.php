@@ -159,7 +159,7 @@ class PS13
                 if (! $tests = $this->VarLoad('tests.json')) $tests = [];
                 $this->tests = $tests;
 
-                $this->embed_footer = ($this->github ?  $this->github . PHP_EOL : '') . "{$this->discord->username} by Valithor#5947";
+                $this->embed_footer = ($this->github ?  $this->github . PHP_EOL : '') . "{$this->discord->username}#{$this->discord->discriminator} by Valithor#5947";
                 $this->setIPs();
                 $this->serverinfoTimer(); //Start the serverinfo timer and update the serverinfo channel
                 
@@ -603,7 +603,7 @@ class PS13
                 $index++; //TODO: Remove this once we have stationname in world.dm
                 continue;
             }
-        $this->playercountChannelUpdate(isset($server['players']) ? $server['players'] : count(array_map(fn($player) => str_replace(['.', '_', ' '], '', strtolower(urldecode($player))), array_filter($server, function($key) { return str_starts_with($key, 'player') && !str_starts_with($key, 'players'); }, ARRAY_FILTER_USE_KEY)))/*, $server_info[$index]['prefix']*/);
+            $this->playercountChannelUpdate(isset($server['players']) ? $server['players'] : count(array_map(fn($player) => str_replace(['.', '_', ' '], '', strtolower(urldecode($player))), array_filter($server, function($key) { return str_starts_with($key, 'player') && !str_starts_with($key, 'players'); }, ARRAY_FILTER_USE_KEY)))/*, $server_info[$index]['prefix']*/);
             $index++; //TODO: Remove this once we have stationname in world.dm
         }
     }
