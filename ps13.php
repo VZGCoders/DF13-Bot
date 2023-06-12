@@ -166,7 +166,7 @@ class PS13
                 if(! empty($this->functions['ready'])) foreach ($this->functions['ready'] as $func) $func($this);
                 else $this->logger->debug('No ready functions found!');
                 $this->discord->application->commands->freshen()->done( function ($commands) {
-                    if (!empty($this->functions['ready_slash'])) foreach ($this->functions['ready_slash'] as $key => $func) $func($this, $commands);
+                    if (!empty($this->functions['ready_slash'])) foreach ($this->functions['ready_slash'] as $func) $func($this, $commands);
                     else $this->logger->debug('No ready slash functions found!');
                 });
                 
