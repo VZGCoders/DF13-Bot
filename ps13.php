@@ -520,7 +520,7 @@ class PS13
     }
     private function playercountChannelUpdate(int $count = 0/*, string $prefix = 'ps13'*/)
     {
-        if ($this->playercount_ticker++ % 10 !== 0) return;
+        if ($this->playercount_ticker % 10 !== 0) return;
         if (! $channel = $this->discord->getChannel($this->channel_ids[/*$prefix . */'playercount'])) return;
     
         [$channelPrefix, $existingCount] = explode('-', $channel->name);
@@ -580,9 +580,9 @@ class PS13
     
             if (isset($server['season'])) $return[$index]['Season'] = [true => urldecode($server['season'])];
     
-        if ($index >= 4) $this->playercountChannelUpdate(isset($server['players']) ? $server['players'] : count($players) ?? 0/*, $si['prefix']*/);
+            if ($index == 4) $this->playercountChannelUpdate(isset($server['players']) ? $server['players'] : count($players) ?? 0/*, $si['prefix']*/);
         }
-    
+        $this->playercount_ticker++;
         return $return;
     }
     public function serverinfoParsePlayers(): void
@@ -599,13 +599,14 @@ class PS13
         $index = 0;
         //foreach ($relevant_servers as $server) //TODO: We need to declare stationname in world.dm first
         foreach ($this->serverinfo as $server) {
-            if (array_key_exists('ERROR', $server) || $index < 4) { //We only care about Pocket Stronghold 13
+            if (array_key_exists('ERROR', $server) || $index != 4) { //We only care about Pocket Stronghold 13
                 $index++; //TODO: Remove this once we have stationname in world.dm
                 continue;
             }
             $this->playercountChannelUpdate(isset($server['players']) ? $server['players'] : count(array_map(fn($player) => str_replace(['.', '_', ' '], '', strtolower(urldecode($player))), array_filter($server, function($key) { return str_starts_with($key, 'player') && !str_starts_with($key, 'players'); }, ARRAY_FILTER_USE_KEY)))/*, $server_info[$index]['prefix']*/);
             $index++; //TODO: Remove this once we have stationname in world.dm
         }
+        $this->playercount_ticker++;
     }
     public function serverinfoTimer(): void
     {
