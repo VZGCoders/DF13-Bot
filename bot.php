@@ -27,7 +27,7 @@ require getcwd() . '/token.php'; //$token
 include getcwd() . '/vendor/autoload.php';
 
 $loop = Loop::get();
-$logger = new Logger('New logger');
+$logger = new Logger('PS13');
 $logger->pushHandler(new StreamHandler('php://stdout'));
 $discord = new Discord([
     'loop' => $loop,
